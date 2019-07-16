@@ -15,11 +15,7 @@ from pprint import pprint
 import os.path
 import sys
 
-
-
-def nickel_mass(t_peak,L_peak,beta):
-    return (L_peak*(beta**2)*(t_peak/8.8)**2)/(2*3.9e10*((0.83*(1-beta*t_peak/8.8)*np.exp(-beta*t_peak/8.8))+(26.56*(1-((1+beta*t_peak/111.3)*np.exp(-beta*t_peak/111.3))))))
-
+from two_decay_chain import *
 
 sys.path.insert(0, '/home/afsari/')
 from SNAP5.Analysis import *
@@ -79,7 +75,7 @@ vph=np.loadtxt("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/2008D/vph_2008
 index=np.argsort(vph[:,0])
 vph=vph[index,:]
 
-print vph
+
 #z = np.polyfit(Lbol[:,0], Lbol[:,1],11)
 #fit = np.poly1d(z)
 fit2= UnivariateSpline(vph[:,0], vph[:,1], s=0.01)
@@ -115,28 +111,28 @@ tmin=4.3*np.sqrt(np.power(10,fit(t))/10**42)*np.power(np.power(10,fit1(t))/10**4
 tdelta[4]=t-tmin
 tdiff=np.mean(tdelta)
 
-# magR=np.loadtxt("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/2008D/Rmag_2008D.csv",delimiter=",")
-# index=np.argsort(magR[:,0])
-# magR=magR[index,:]
-# magR[:,1]=22-(magR[:,1]-22)
-# fit5= UnivariateSpline(magR[magR[:,0]>-0.1,0], magR[magR[:,0]>-0.1,1], s=0.05)
-# t_mr=np.arange(0,40,0.1)
-# mr=fit5(t_mr)
-# ax=plt.subplot(111)
-# #plt.plot(t_vph,V_vph,'--',color='green')
-# plt.scatter(magR[:,0],magR[:,1],s=20)
-# i=np.argmin(mr)
-# print mr[i]
-# print t_mr[i]
+magR=np.loadtxt("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/2008D/Rmag_2008D.csv",delimiter=",")
+index=np.argsort(magR[:,0])
+magR=magR[index,:]
+magR[:,1]=22-(magR[:,1]-22)
+fit5= UnivariateSpline(magR[magR[:,0]>-0.1,0], magR[magR[:,0]>-0.1,1], s=0.05)
+t_mr=np.arange(0,40,0.1)
+mr=fit5(t_mr)
+#ax=plt.subplot(111)
+#plt.plot(t_vph,V_vph,'--',color='green')
+#plt.scatter(magR[:,0],magR[:,1],s=20)
+i=np.argmin(mr)
+print mr[i]
+print t_mr[i]
 # print fit5(t_mr[i]+15)
-# d_mr_15=fit5(t_mr[i]+15)-mr[i]
+d_mr_15=fit5(t_mr[i]+15)-mr[i]
 # plt.plot(t_mr,mr)
 # plt.gca().invert_yaxis()
 # plt.show()
-# print d_mr_15
-# t_rise=57.08-71.17*d_mr_15+32.98*d_mr_15**2
-# print t_rise
-#tdiff=7
+d_mr_15=0.55
+t_rise=57.08-71.17*d_mr_15+32.98*d_mr_15**2
+print t_rise
+tdiff=0
 Lbol[:,0]=Lbol[:,0]-tdiff
 fit= UnivariateSpline(Lbol[:,0], Lbol[:,1], s=0.01)
 t_Lbol=np.arange(0,40,0.1)
@@ -144,11 +140,28 @@ L_Lbol=fit(t_Lbol)
 
 
 index=np.argmax(L_Lbol)
+
+LPEAK= "-16.8 Mbol (Soderburg2008) = 10^42.2 assuming Mbol_sun=4.74 & Lbol_sun=3.82*10^33"
+LPEAK= "10^42.2 Bersten 2011"
+LPEAK= "10^42.23 Mazzali 2008"
 L_peak=L_Lbol[index]
 t_peak=t_Lbol[index]
 ax=plt.subplot(111)
-plt.plot(t_Lbol,L_Lbol,'-.',color='green')
-plt.plot(Lbol[:,0],Lbol[:,1],color='red')
+plt.plot(t_Lbol,L_Lbol,'-.',color='green',label="fitted")
+plt.plot(Lbol[:,0],Lbol[:,1],color='red',label='data ')
+
 plt.show()
 print L_peak,t_peak
-print nickel_mass(t_peak,10**L_peak,9/8)/2e33
+print nickel_mass(t_peak,10**L_peak,9/8)
+
+#sn2008d
+L_peak=42.2
+t_peak=18.5
+beta=9/8
+print "M_ni(2008D)=",nickel_mass(t_peak,10**L_peak,beta)
+
+#sn1987a
+L_peak=41.85
+t_peak=80
+beta=0.82
+print "M_ni(1987A)=",nickel_mass(t_peak,10**L_peak,beta)
