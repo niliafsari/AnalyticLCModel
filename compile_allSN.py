@@ -24,9 +24,12 @@ sys.path.insert(0, '/home/afsari/')
 from SNAP5.Analysis import *
 from lyman_BC import  *
 
-def nickel_mass(t_peak,L_peak,beta):
-    return (L_peak*(beta**2)*(t_peak/8.8)**2)/(2*3.9e10*((0.83*(1-beta*t_peak/8.8)*np.exp(-beta*t_peak/8.8))+(26.56*(1-((1+beta*t_peak/111.3)*np.exp(-beta*t_peak/111.3))))))/M_sun.to("g")
-
+def nickel_mass(t_peak,L_peak,L_peak_e,beta):
+    n=1000
+    L= np.multiply(np.tile(L_peak_e,n), np.random.randn(n)+np.tile(L_peak,n))
+    t_peak_t=np.tile(t_peak, n)
+    MNi=np.divide(np.multiply(L_peak*(beta**2),(t_peak_t/8.8)**2),(2*3.9e10*((0.83*np.multiply((1-beta*t_peak_t/8.8),np.exp(-beta*t_peak_t/8.8)))+(26.56*(1-(np.multiply((1+beta*t_peak_t/111.3),np.exp(-beta*t_peak_t/111.3))))))))/M_sun.to("g").value
+    return np.mean(MNi,axis=0), np.std(MNi,axis=0)
 
 fig = plt.figure()
 url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQsvlrp1xYmZcWSy11LxxPg_X5qNPxlzjRUyQ_iGGSXcYESRxub6loaMWdD4J9jtqc8B4dKoKW_Fs0i/pub?gid=0&single=true&output=csv'
@@ -48,6 +51,9 @@ f.set_figwidth(12)
 f = plt.figure(2)
 f.set_figheight(7)
 f.set_figwidth(12)
+results = np.zeros(shape=(info[1:,0].shape[0]+1, 7), dtype=object)
+results[0,:]=['Lbol_peak', 't_peak', '56Ni from Suggested beta', '56Ni tail','M_ej/E', '56Ni tail error', 'beta required']
+print results[0,:]
 for i,sn_name in enumerate(info[1:,0]):
     print "SN name:",sn_name
     location='./Data/SN_json/'
@@ -102,19 +108,19 @@ for i,sn_name in enumerate(info[1:,0]):
 
     if sn_name == 'SN2016gkg':
         t_u = np.arange(10, 100, 0.1)
-        s=0.05
+        s=0.15
     elif sn_name == 'iPTF13bvn':
-        t_u = np.arange(10, 230, 0.1)
-        s=0.05
-    elif sn_name == 'SN2009jf':
-        t_u = np.arange(10, 130, 0.1)
-        s=0.05
-    elif sn_name == 'SN2013df':
-        t_u = np.arange(10, 250, 0.1)
+        t_u = np.arange(10, 90, 0.1)
+        s=0.2
+    elif sn_name == 'SN1993J':
+        t_u = np.arange(10, 100, 0.1)
         s=0.25
+    elif sn_name == 'SN2013df':
+        t_u = np.arange(10, 200, 0.1)
+        s=0.35
     else:
-        t_u = np.arange(10, 130, 0.1)
-        s=0.3
+        t_u = np.arange(13, 130, 0.1)
+        s=0.2
     M_u=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
     M_e=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
     for j,band in enumerate(Band):
@@ -127,7 +133,7 @@ for i,sn_name in enumerate(info[1:,0]):
         t,u=np.unique(t,return_index=True)
         fit = ErrorPropagationSpline(t,M[u],Me[u], s=s)
         M_u[j,:],M_e[j,:]=fit(t_u)
-        if (sn_name=='iPTF13bvn' )| (sn_name=='SN2016gkg') | (sn_name=='SN2013df') :
+        if (sn_name=='SN2016gkg')  :
             fit = UnivariateSpline(t, M[u], s=s)
             M_u[j, :]= fit(t_u)
     if 1:
@@ -143,52 +149,58 @@ for i,sn_name in enumerate(info[1:,0]):
         lbol,le=lyman_BC(np.reshape(M_u[0, :],(1,np.shape(M_u[0, :])[0])), np.reshape(M_u[1, :],(1,np.shape(M_u[1, :])[0])),Band[0],Band[1])
         plt.figure(2)
         plt.subplot(2, 4, i)
-        plt.errorbar(np.reshape(t_u, (1,t_u.shape[0])),lbol,yerr=le)
-        if sn_name=='SN2013ge':
-            plt.figure(3)
-            plt.errorbar(np.reshape(t_u-t_u[np.argmax(lbol)], (1, t_u.shape[0])), lbol, yerr=le)
-            data_ge=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SN2013ge_PseudoBol.dat', delimiter=',')
-            plt.errorbar(data_ge[:,1], data_ge[:,3], yerr=data_ge[:,6])
-            lbol=data_ge[:,3]
-            t_u=data_ge[:,0]-t0
-            fig.subplots_adjust(hspace=0, wspace=0)
-            plt.tight_layout()
-            plt.show()
+        plt.errorbar(np.reshape(t_u, (1,t_u.shape[0])),lbol,yerr=le, fmt='b', ecolor='yellow')
+        # if sn_name=='SN1993J':
+        #     plt.figure(3)
+        #     plt.scatter(mag[:, 0][mag[:, 5] == Band[0]].astype(float) - t0,
+        #                 mag[:, 3][mag[:, 5] == Band[0]].astype(float), label=Band[0])
+        #     plt.scatter(mag[:, 0][mag[:, 5] == Band[1]].astype(float) - t0,
+        #                 mag[:, 3][mag[:, 5] == Band[1]].astype(float), label=Band[1])
+        #     plt.errorbar(np.reshape(t_u-t_u[np.argmax(lbol)], (1, t_u.shape[0])), lbol, yerr=le, label='Lyman16 BC')
+        #     #data_ge=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SN2013ge_PseudoBol.dat', delimiter=',')
+        #     #plt.errorbar(data_ge[:,1], data_ge[:,3], yerr=data_ge[:,6], label='drout16')
+        #     #lbol=data_ge[:,3]
+        #     #t_u=data_ge[:,0]-t0
+        #     fig.subplots_adjust(hspace=0, wspace=0)
+        #     plt.tight_layout()
+        #     plt.xlabel('Time')
+        #     plt.ylabel('Luminosity [erg/s]')
+        #     plt.legend()
+        #     plt.show()
         plt.legend()
         plt.title(sn_name)
-
+    results[i + 1, 1]=t_u[np.argmax(lbol)]
+    results[i + 1, 0]=np.max(lbol)
     print "lbol_max:", np.max(lbol), t_u[np.argmax(lbol)]
-    print "M_ni(beta)=", nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),sug_beta[info[i+1,2]])
+    print i,le.shape, lbol.shape
+    results[i + 1, 2] =nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[0,np.argmax(lbol)],sug_beta[info[i+1,2]])[0]
+    print "M_ni(beta)=", results[i+1,2]
     beta = np.arange(0, 5, 0.005)
     m56 = np.zeros(shape=beta.shape)
-    for uu, b in enumerate(beta):
-        m56[uu] = nickel_mass(t_u[np.argmax(lbol)], np.max(lbol), b).value
+    m56_e = np.zeros(shape=beta.shape)
+    # for uu, b in enumerate(beta):
+    #     m56[uu],m56_e[uu]  = nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[np.argmax(lbol)], b)
     E = np.arange(2.7, 5, 0.1)
     Mni56 = np.zeros(shape=E.shape)
+    Mni56_e = np.zeros(shape=E.shape)
     Mni56_std = np.zeros(shape=E.shape)
     lbol=np.reshape(lbol,t_u.shape)
-    for i, e in enumerate(E):
-        M_ni56 = valenti_ni56(t_u[(t_u >= 60) & (t_u < 120)], lbol[(t_u >= 60)& (t_u <120) ], 1, e)
-        Mni56_std[i] = np.std(M_ni56)
-        Mni56[i] = np.mean(M_ni56)
+    le = np.reshape(le, t_u.shape)
+    for k, e in enumerate(E):
+        M_ni56, Mni56_e = valenti_ni56(t_u[(t_u >= 60) & (t_u < 120)], lbol[(t_u >= 60)& (t_u <120) ], 1, e,le[(t_u >= 60)& (t_u <120) ])
+        Mni56_std[k] = np.sqrt(np.std(M_ni56)**2+np.mean(Mni56_e)**2)
+        Mni56[k] = np.mean(M_ni56)
     print Mni56[np.argmin(Mni56_std)], np.min(Mni56_std), E[np.argmin(Mni56_std)]
-    for i, b in enumerate(beta):
-        m56[i] = nickel_mass(t_u[np.argmax(lbol)], np.max(lbol), b).value
+    results[i + 1, 3] =Mni56[np.argmin(Mni56_std)]
+    results[i + 1,4] =np.min(Mni56_std)
+    results[i + 1, 5] =E[np.argmin(Mni56_std)]
+    for k, b in enumerate(beta):
+        m56[k], m56_e[k]= nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[np.argmax(lbol)], b)
     print "m56, beta", m56[np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))], beta[
         np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))]
-    alpha_co = -1 / 111.26
-    beta_co = 43
-    co = np.zeros(shape=(2,))
-    co[1] = beta_co
-    co[0] = alpha_co
-    fit_3 = np.poly1d(co)
+    results[i + 1, 6] = beta[np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))]
 
-    alpha_ni = -1 / 6.1
-    beta_ni = 44
-    ni = np.zeros(shape=(2,))
-    ni[1] = beta_ni
-    ni[0] = alpha_ni
-
+np.savetxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/Results.txt',results,fmt='%12s',delimiter=',')
 #plt.xlabel('Time (days)')
 #plt.ylabel('Magnitude (mag)')
 plt.figure(1)

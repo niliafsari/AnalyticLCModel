@@ -5,11 +5,11 @@ class ErrorPropagationSpline(object):
     """
     Does a spline fit, but returns both the spline value and associated uncertainty.
     """
-    def __init__(self, x, y, yerr, N=50, *args, **kwargs):
+    def __init__(self, x, y, yerr, N=1000, *args, **kwargs):
         """
         See docstring for InterpolatedUnivariateSpline
         """
-        yerr=np.clip(yerr,a_min=0.01,a_max=None)
+        yerr=np.clip(yerr,a_min=0.001,a_max=1)
         yy = np.vstack([y + np.random.normal(loc=0, scale=yerr) for i in range(N)]).T
         self._splines = [spline(x, yy[:, i], *args, **kwargs) for i in range(N)]
 

@@ -14,7 +14,7 @@ import os.path
 import sys
 from scipy.interpolate import UnivariateSpline
 
-def valenti_ni56(dt,Lbol,E51=0,Mej=0):
+def valenti_ni56(dt,Lbol,E51=0,Mej=0,Le=0):
     M_sun=2e33
     c=3e10
     tau_Ni=8.8*86400. # decay time of Ni56 in sec
@@ -23,6 +23,9 @@ def valenti_ni56(dt,Lbol,E51=0,Mej=0):
     e_Co=6.78e9 #erg/s/g energy produced by 1 gram of Co
     if (E51==0.0 or Mej==0.0):
         M_Ni = np.divide(Lbol,(e_Ni*np.exp(-dt*86400./tau_Ni)+ e_Co*(np.exp(-dt*86400./tau_Co) - np.exp(-dt*86400./tau_Ni))))
+        M_Ni_e = np.divide(Le, (e_Ni * np.exp(-dt * 86400. / tau_Ni) + e_Co * (
+                    np.exp(-dt * 86400. / tau_Co) - np.exp(-dt * 86400. / tau_Ni))))
+
     else:
         M_ej = Mej * M_sun
         E_51 = E51
@@ -35,7 +38,8 @@ def valenti_ni56(dt,Lbol,E51=0,Mej=0):
         S_Co2 = 0.164*Epsilon*(1-np.exp(-(F/dt)**2.))*(1-np.exp(-(G/dt)**2.))
         S_Co3 = 0.036*Epsilon*(1-np.exp(-(G/dt)**2.))
         M_Ni = np.divide(Lbol,S_Ni+S_Co1+S_Co2+S_Co3)
-    return M_Ni/M_sun
+        M_Ni_e=np.divide(Le,S_Ni+S_Co1+S_Co2+S_Co3)
+    return M_Ni/M_sun, M_Ni_e/M_sun
 
 # ;free parameters
 # M_Ni = double(MNi[0])*M_sun
