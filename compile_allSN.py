@@ -39,17 +39,17 @@ with requests.Session() as s:
     decoded_content = download.content.decode('utf-8')
     cr = csv.reader(decoded_content.splitlines(), delimiter=',')
     my_list = list(cr)
-sn_fit_max={'SN2016gkg':1}
-sn_s={'SN2016gkg':0.05}
+#sn_fit_max={'SN2016gkg':1}
+#sn_s={'SN2016gkg':0.05}
 info=np.array(my_list)
 coef = {'B': 3.626, 'V': 2.742, 'I': 1.505, "i'": 1.698, "r'": 2.285, "R": 2.169}
 add = []
 sug_beta={'Ib':1.125, 'Ic':1.125, 'IIb':0.82, 'Ia':1.6}
 f = plt.figure(1)
-f.set_figheight(7)
+f.set_figheight(10)
 f.set_figwidth(12)
 f = plt.figure(2)
-f.set_figheight(7)
+f.set_figheight(10)
 f.set_figwidth(12)
 results = np.zeros(shape=(info[1:,0].shape[0]+1, 7), dtype=object)
 results[0,:]=['Lbol_peak', 't_peak', '56Ni from Suggested beta', '56Ni tail','M_ej/E', '56Ni tail error', 'beta required']
@@ -89,9 +89,9 @@ for i,sn_name in enumerate(info[1:,0]):
     else:
         DMe=0
     Band=info[i+1,10].split(',')[0].split("-")
-    print ebv,ebv_e,d,de,t0,t0_e,Band
     if sn_name=='SN2008D':
-        continue
+        Band = ["V","i'", "r'"]
+    print ebv,ebv_e,d,de,t0,t0_e,Band
     mag = np.zeros(shape=(0, 6))
     for dat in data[sn_name]["photometry"]:
        if "band" in dat.keys():
@@ -104,6 +104,7 @@ for i,sn_name in enumerate(info[1:,0]):
                     add = np.concatenate(([float(dat["time"]), dat["magnitude"], error],[deredMag(float(dat["magnitude"]), float(ebv), coef[dat["band"]])-DM, np.sqrt(error**2+DMe**2),dat["band"]]))
                     add = np.reshape(add, (1, 6))
                     mag = np.concatenate((mag, add), axis=0)
+    print info[i+1,11]
     np.save("Data/SN_photometry/"+sn_name + ".npy", mag)
 
     if sn_name == 'SN2016gkg':
@@ -112,15 +113,33 @@ for i,sn_name in enumerate(info[1:,0]):
     elif sn_name == 'iPTF13bvn':
         t_u = np.arange(10, 90, 0.1)
         s=0.2
+    elif sn_name == 'SN2008D':
+        t_u = np.arange(10, 120, 0.1)
+        s=0.25
     elif sn_name == 'SN1993J':
         t_u = np.arange(10, 100, 0.1)
         s=0.25
     elif sn_name == 'SN2013df':
         t_u = np.arange(10, 200, 0.1)
         s=0.35
+    elif sn_name == 'SN2006jc':
+        t_u = np.arange(10, 90, 0.1)
+        s=0.25
+    elif sn_name == 'SN1994I':
+        t_u = np.arange(10, 60, 0.1)
+        s=0.25
+    elif sn_name == 'SN2004aw':
+        t_u = np.arange(10, 85, 0.1)
+        s=0.25
+    elif sn_name == 'SN2009bb':
+        t_u = np.arange(10, 75, 0.1)
+        s=0.25
+    elif sn_name == 'SN2009bb':
+        t_u = np.arange(10, 75, 0.1)
+        s=0.25
     else:
         t_u = np.arange(13, 130, 0.1)
-        s=0.2
+        s=0.25
     M_u=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
     M_e=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
     for j,band in enumerate(Band):
@@ -138,7 +157,7 @@ for i,sn_name in enumerate(info[1:,0]):
             M_u[j, :]= fit(t_u)
     if 1:
         plt.figure(1)
-        plt.subplot(2, 4, i)
+        plt.subplot(3,6, i+1)
         plt.scatter(mag[:,0][mag[:,5]==Band[0]].astype(float)-t0,mag[:,3][mag[:,5]==Band[0]].astype(float),label=Band[0])
         plt.scatter(mag[:,0][mag[:,5]==Band[1]].astype(float)-t0,mag[:,3][mag[:,5]==Band[1]].astype(float),label=Band[1])
         plt.scatter(t_u, M_u[0, :],s=0.5)
@@ -146,34 +165,63 @@ for i,sn_name in enumerate(info[1:,0]):
         plt.legend()
         plt.title(sn_name)
         plt.gca().invert_yaxis()
+        if sn_name=='SN2008D':
+            M_u[1, :] = M_u[2, :] - 1.2444 * (M_u[2, :] - M_u[1, :]) - 0.3820
+            Band[1]='I'
         lbol,le=lyman_BC(np.reshape(M_u[0, :],(1,np.shape(M_u[0, :])[0])), np.reshape(M_u[1, :],(1,np.shape(M_u[1, :])[0])),Band[0],Band[1])
         plt.figure(2)
-        plt.subplot(2, 4, i)
+        plt.subplot(3, 6, i+1)
+        plt.gca().annotate(sn_name,xy=(0.7, 0.9), xycoords='axes fraction')
         plt.errorbar(np.reshape(t_u, (1,t_u.shape[0])),lbol,yerr=le, fmt='b', ecolor='yellow')
-        # if sn_name=='SN1993J':
-        #     plt.figure(3)
-        #     plt.scatter(mag[:, 0][mag[:, 5] == Band[0]].astype(float) - t0,
-        #                 mag[:, 3][mag[:, 5] == Band[0]].astype(float), label=Band[0])
-        #     plt.scatter(mag[:, 0][mag[:, 5] == Band[1]].astype(float) - t0,
-        #                 mag[:, 3][mag[:, 5] == Band[1]].astype(float), label=Band[1])
-        #     plt.errorbar(np.reshape(t_u-t_u[np.argmax(lbol)], (1, t_u.shape[0])), lbol, yerr=le, label='Lyman16 BC')
-        #     #data_ge=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SN2013ge_PseudoBol.dat', delimiter=',')
-        #     #plt.errorbar(data_ge[:,1], data_ge[:,3], yerr=data_ge[:,6], label='drout16')
-        #     #lbol=data_ge[:,3]
-        #     #t_u=data_ge[:,0]-t0
-        #     fig.subplots_adjust(hspace=0, wspace=0)
-        #     plt.tight_layout()
-        #     plt.xlabel('Time')
-        #     plt.ylabel('Luminosity [erg/s]')
-        #     plt.legend()
-        #     plt.show()
-        plt.legend()
-        plt.title(sn_name)
+        xx = 1
+        if (sn_name=='SN2013ge') | (sn_name=='iPTF13bvn') | (sn_name=='SN2009jf'):
+            #plt.figure(3)
+            #plt.errorbar(np.reshape(t_u-t_u[np.argmax(lbol)], (1, t_u.shape[0])), lbol, yerr=le, label='Lyman16 BC')
+            if sn_name == 'SN2013ge':
+                plt.figure(3)
+                plt.errorbar(np.reshape(t_u - t_u[np.argmax(lbol)], (1, t_u.shape[0])), lbol, yerr=le,
+                             label='Lyman16 BC')
+                data_ge = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/' + sn_name + '_PseudoBol.dat',
+                                     delimiter=',')
+                plt.errorbar(data_ge[:,1], data_ge[:,3], yerr=data_ge[:,6], label=sn_name+' drout16')
+                lbol = data_ge[:, 3]
+                t_u = data_ge[:, 0] - t0
+                plt.xlabel('Time')
+                plt.ylabel('Luminosity [erg/s]')
+                plt.legend()
+                plt.title(sn_name)
+            elif sn_name=='iPTF13bvn' :
+                plt.figure(4)
+                plt.errorbar(np.reshape(t_u, (1, t_u.shape[0])), lbol, yerr=le, label='Lyman16 BC')
+                data_ge = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/' + sn_name + '_PseudoBol.dat',
+                        delimiter=',')
+                plt.scatter(data_ge[:, 0], 10**data_ge[:, 1],s=2, label=sn_name+' drout16')
+                lbol = 10**data_ge[:, 1]
+                t_u = data_ge[:, 0]
+                plt.xlabel('Time')
+                plt.ylabel('Luminosity [erg/s]')
+                plt.legend()
+                plt.title(sn_name)
+            elif sn_name=='SN2009jf' :
+                plt.figure(5)
+                plt.errorbar(np.reshape(t_u, (1, t_u.shape[0])), lbol, yerr=le, label='Lyman16 BC')
+                data_ge = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/' + sn_name + '_PseudoBol.dat',
+                        delimiter=',')
+                plt.scatter(data_ge[:, 0], 10**((43-data_ge[:, 1])+41),s=2, label=sn_name+' drout16')
+                lbol = 10**((43-data_ge[:, 1])+41)
+                t_u = data_ge[:, 0]
+                plt.xlabel('Time')
+                plt.ylabel('Luminosity [erg/s]')
+                plt.legend()
+                plt.title(sn_name)
+            xx=0
+            # fig.subplots_adjust(hspace=0, wspace=0)
+            # plt.tight_layout()
     results[i + 1, 1]=t_u[np.argmax(lbol)]
     results[i + 1, 0]=np.max(lbol)
     print "lbol_max:", np.max(lbol), t_u[np.argmax(lbol)]
     print i,le.shape, lbol.shape
-    results[i + 1, 2] =nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[0,np.argmax(lbol)],sug_beta[info[i+1,2]])[0]
+    results[i + 1, 2] =nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[0,np.argmax(lbol)],sug_beta[info[i+1,2].split(' ')[0]])[0]
     print "M_ni(beta)=", results[i+1,2]
     beta = np.arange(0, 5, 0.005)
     m56 = np.zeros(shape=beta.shape)
@@ -185,7 +233,10 @@ for i,sn_name in enumerate(info[1:,0]):
     Mni56_e = np.zeros(shape=E.shape)
     Mni56_std = np.zeros(shape=E.shape)
     lbol=np.reshape(lbol,t_u.shape)
-    le = np.reshape(le, t_u.shape)
+    if xx:
+        le = np.reshape(le, t_u.shape)
+    else:
+        le = np.zeros(t_u.shape)
     for k, e in enumerate(E):
         M_ni56, Mni56_e = valenti_ni56(t_u[(t_u >= 60) & (t_u < 120)], lbol[(t_u >= 60)& (t_u <120) ], 1, e,le[(t_u >= 60)& (t_u <120) ])
         Mni56_std[k] = np.sqrt(np.std(M_ni56)**2+np.mean(Mni56_e)**2)
@@ -199,6 +250,9 @@ for i,sn_name in enumerate(info[1:,0]):
     print "m56, beta", m56[np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))], beta[
         np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))]
     results[i + 1, 6] = beta[np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))]
+    print i
+    # if i==8:
+    #     break
 
 np.savetxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/Results.txt',results,fmt='%12s',delimiter=',')
 #plt.xlabel('Time (days)')
@@ -211,4 +265,13 @@ plt.show()
 plt.figure(2)
 fig.subplots_adjust(hspace=0, wspace=0)
 plt.tight_layout()
+plt.show()
+
+plt.figure(3)
+plt.show()
+
+plt.figure(4)
+plt.show()
+
+plt.figure(5)
 plt.show()
