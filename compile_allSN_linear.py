@@ -126,7 +126,7 @@ for i,sn_name in enumerate(info[1:,0]):
         t_u = np.arange(10, 90, 0.1)
         s=0.25
     elif sn_name == 'SN1994I':
-        t_u = np.arange(10, 60, 0.1)
+        t_u = np.arange(10, 100, 0.1)
         s=0.25
     elif sn_name == 'SN2004aw':
         t_u = np.arange(10, 85, 0.1)
@@ -134,11 +134,8 @@ for i,sn_name in enumerate(info[1:,0]):
     elif sn_name == 'SN2009bb':
         t_u = np.arange(10, 75, 0.1)
         s=0.25
-    elif sn_name == 'SN2009bb':
-        t_u = np.arange(10, 75, 0.1)
-        s=0.25
     else:
-        t_u = np.arange(13, 130, 0.1)
+        t_u = np.arange(10, 130, 0.1)
         s=0.25
     M_u=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
     M_e=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
@@ -155,9 +152,10 @@ for i,sn_name in enumerate(info[1:,0]):
         if (sn_name=='SN2016gkg')  :
             fit = UnivariateSpline(t, M[u], s=s)
             M_u[j, :]= fit(t_u)
-    t_u_t=np.clip(t_u,a_min=50, a_max=130)
-    M_u_t=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
-    M_e_t=np.zeros(shape=(len(Band)+2,np.shape(t_u)[0]))
+    t_u_t=np.clip(t_u,a_min=60, a_max=130)
+    t_u_t = np.unique(t_u_t)
+    M_u_t=np.zeros(shape=(len(Band)+2,np.shape(t_u_t)[0]))
+    M_e_t=np.zeros(shape=(len(Band)+2,np.shape(t_u_t)[0]))
     if sn_name=='SN2002ap':
         continue
     for j,band in enumerate(Band):
@@ -170,7 +168,7 @@ for i,sn_name in enumerate(info[1:,0]):
         t,u=np.unique(t,return_index=True)
         M=M[u]
         Me=Me[u]
-        fit = ErrorPropagationLinear(t[(t>50) & (t<170)],M[(t>50) & (t<170)],Me[(t>50) & (t<170)])
+        fit = ErrorPropagationLinear(t[(t>50)],M[(t>50) ],Me[(t>50) ])
         M_u_t[j,:],M_e_t[j,:]=fit(t_u_t)
     if 1:
         plt.figure(1)
@@ -246,7 +244,7 @@ for i,sn_name in enumerate(info[1:,0]):
     m56_e = np.zeros(shape=beta.shape)
     # for uu, b in enumerate(beta):
     #     m56[uu],m56_e[uu]  = nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[np.argmax(lbol)], b)
-    E = np.arange(2.7, 5, 0.1)
+    E = np.arange(2.7, 8, 0.1)
     Mni56 = np.zeros(shape=E.shape)
     Mni56_e = np.zeros(shape=E.shape)
     Mni56_std = np.zeros(shape=E.shape)
