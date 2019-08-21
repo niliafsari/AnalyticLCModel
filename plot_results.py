@@ -139,6 +139,7 @@ ax.xaxis.set_ticks(np.arange(0, 0.8, 0.1))
 ax.yaxis.set_ticks(np.arange(0, 0.8, 0.1))
 plt.tight_layout()
 ax.set_aspect('equal', adjustable='box')
+f.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Arnett_Tail.pdf', bbox_inches='tight')
 
 
 ax2.legend(loc='best', bbox_to_anchor=(1.3, -0.2),
@@ -157,7 +158,7 @@ ax2.xaxis.set_ticks(np.arange(0, 0.7, 0.1))
 ax2.yaxis.set_ticks(np.arange(0, 0.7, 0.1))
 ax2.set_aspect('equal', adjustable='box')
 plt.tight_layout()
-f2.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_prenticeComparison.pdf')
+f2.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_prenticeComparison.pdf', bbox_inches='tight')
 
 ax3.legend(loc='best', bbox_to_anchor=(1.3, -0.3),
           fancybox=True, ncol=3, fontsize =10)
@@ -175,7 +176,7 @@ ax3.xaxis.set_ticks(np.arange(42.2, 43.6, 0.4))
 ax3.yaxis.set_ticks(np.arange(42.2, 43.6, 0.4))
 plt.tight_layout()
 ax3.set_aspect('equal', adjustable='box')
-f4.savefig('./Plots/Lpeak_prenticeComparison.pdf')
+f4.savefig('./Plots/Lpeak_prenticeComparison.pdf', bbox_inches='tight')
 
 ax4.legend(loc='best', bbox_to_anchor=(1.3, -0.3),
           fancybox=True, ncol=3, fontsize =10)
@@ -193,7 +194,7 @@ ax4.xaxis.set_ticks(np.arange(10, 30, 5))
 ax4.yaxis.set_ticks(np.arange(10, 30, 5))
 plt.tight_layout()
 ax4.set_aspect('equal', adjustable='box')
-f4.savefig('./Plots/tpeak_prenticeComparison.pdf')
+f4.savefig('./Plots/tpeak_prenticeComparison.pdf', bbox_inches='tight')
 
 ax5.legend(loc='best', bbox_to_anchor=(0.5, -0.3),
           fancybox=True, ncol=3, fontsize =10)
@@ -209,7 +210,7 @@ ax5.set_xlim(42.2, 43.2)
 ax5.set_ylim(0, 0.3)
 ax5.xaxis.set_ticks(np.arange(42.2, 43.6, 0.4))
 ax5.yaxis.set_ticks(np.arange(0, 0.3+0.05, 0.05))
-f5.savefig('./Plots/Ni_Tail_Lpeak.pdf')
+f5.savefig('./Plots/Ni_Tail_Lpeak.pdf', bbox_inches='tight')
 plt.tight_layout()
 #ax5.set_aspect('equal', adjustable='box')
 
@@ -228,10 +229,10 @@ ax6.set_ylim(0, 0.6)
 ax6.xaxis.set_ticks(np.arange(0, 0.7, 0.1))
 ax6.yaxis.set_ticks(np.arange(0, 0.7, 0.1))
 ax6.set_aspect('equal', adjustable='box')
-f6.savefig('./Plots/Ni_Prentice_Arnett.pdf')
+f6.savefig('./Plots/Ni_Prentice_Arnett.pdf', bbox_inches='tight')
 
 
-ax7.legend(loc='best', bbox_to_anchor=(1.3, -0.2),
+ax7.legend( loc='best', bbox_to_anchor=(1.3, -0.2),
           fancybox=True, ncol=3, fontsize =10)
 #ax6.plot(np.arange(0, 0.8, 0.1),np.arange(0, 0.8, 0.1),'--',color='black',linewidth=1)
 ax7.yaxis.set_minor_locator(AutoMinorLocator(5))
@@ -246,7 +247,7 @@ ax7.xaxis.set_ticks(np.arange(0, 0.4, 0.1))
 #ax7.yaxis.set_ticks(np.arange(0, 0.7, 0.1))
 #ax7.set_aspect('equal', adjustable='box')
 plt.tight_layout()
-f7.savefig('./Plots/Ni_Tail_BetaReq.pdf')
+f7.savefig('./Plots/Ni_Tail_BetaReq.pdf', bbox_inches='tight')
 
 #ax5.set_aspect('equal', adjustable='box')
 
@@ -266,5 +267,5 @@ ax8.xaxis.set_ticks(np.arange(0, 0.7, 0.1))
 ax8.yaxis.set_ticks(np.arange(0, 0.7, 0.1))
 ax8.set_aspect('equal', adjustable='box')
 plt.tight_layout()
-f8.savefig('./Plots/Ni_Tail_fromSugBeta.pdf')
+f8.savefig('./Plots/Ni_Tail_fromSugBeta.pdf', bbox_inches='tight')
 plt.show()
