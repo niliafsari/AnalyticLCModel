@@ -24,12 +24,14 @@ sys.path.insert(0, '/home/afsari/')
 from SNAP5.Analysis import *
 from lyman_BC import  *
 
-def nickel_mass(t_peak,L_peak,L_peak_e,beta):
-    n=1000
-    L= np.multiply(np.tile(L_peak_e,n), np.random.randn(n)+np.tile(L_peak,n))
-    t_peak_t=np.tile(t_peak, n)
-    MNi=np.divide(np.multiply(L_peak*(beta**2),(t_peak_t/8.8)**2),(2*3.9e10*((0.83*np.multiply((1-beta*t_peak_t/8.8),np.exp(-beta*t_peak_t/8.8)))+(26.56*(1-(np.multiply((1+beta*t_peak_t/111.3),np.exp(-beta*t_peak_t/111.3))))))))/M_sun.to("g").value
-    return np.mean(MNi,axis=0), np.std(MNi,axis=0)
+from scipy.optimize import curve_fit
+from scipy.optimize import leastsq
+
+#essential files
+from SNAP4.Analysis.LCRoutines import*
+from SNAP4.Analysis.LCFitting import*
+from scipy.optimize import leastsq
+
 
 fig = plt.figure()
 url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQsvlrp1xYmZcWSy11LxxPg_X5qNPxlzjRUyQ_iGGSXcYESRxub6loaMWdD4J9jtqc8B4dKoKW_Fs0i/pub?gid=0&single=true&output=csv'
@@ -40,8 +42,6 @@ with requests.Session() as s:
     cr = csv.reader(decoded_content.splitlines(), delimiter=',')
     my_list = list(cr)
 
-#url='https://docs.google.com/spreadsheets/d/e/2PACX-1vQsvlrp1xYmZcWSy11LxxPg_X5qNPxlzjRUyQ_iGGSXcYESRxub6loaMWdD4J9jtqc8B4dKoKW_Fs0i/pub?gid=0&single=true&output=csv'
-#url='https://docs.google.com/spreadsheets/d/e/2PACX-1vTRiEGa3J6bnG5R4JhDz6Wx2gb_KK9TnRdkn5YdWIoar6_ugH1p42KYLkDMHiMjjOUxXPxaPH22wjRN/pub?gid=0&single=true&output=csv'
 url='https://docs.google.com/spreadsheets/d/e/2PACX-1vTRiEGa3J6bnG5R4JhDz6Wx2gb_KK9TnRdkn5YdWIoar6_ugH1p42KYLkDMHiMjjOUxXPxaPH22wjRN/pub?gid=0&single=true&output=csv'
 plt.close("all")
 with requests.Session() as s:
@@ -49,8 +49,7 @@ with requests.Session() as s:
     decoded_content = download.content.decode('utf-8')
     cr = csv.reader(decoded_content.splitlines(), delimiter=',')
     my_list1 = list(cr)
-#sn_fit_max={'SN2016gkg':1}
-#sn_s={'SN2016gkg':0.05}
+
 info=np.array(my_list)
 prentice=np.array(my_list1)
 prentice_name=[]
@@ -68,9 +67,8 @@ f.set_figwidth(12)
 f = plt.figure(2)
 f.set_figheight(10)
 f.set_figwidth(12)
-results = np.zeros(shape=(info[1:,0].shape[0]+1, 13), dtype=object)
-results[0,:]=['Name', 'type', 'Lbol_peak', 't_peak', '56Ni from Suggested beta', '56Ni tail','M_ej/E', '56Ni tail error', 'beta required', 'Lp_prentice', 'tp_prentice', 'Ni_prentice','Arnett Ni']
-print results[0,:]
+results = np.zeros(shape=(info[1:,0].shape[0]+1, 14), dtype=object)
+results[0,:]=['Name', 'type', 'Lbol_peak', 't_peak', '56Ni from Suggested beta', '56Ni tail', '56Ni tail error','F','M_ejEk', 'beta required', 'Lp_prentice', 'tp_prentice', 'Ni_prentice','Arnett Ni']
 
 for i,sn_name in enumerate(info[1:,0]):
     print "SN name:",sn_name
@@ -277,17 +275,8 @@ for i,sn_name in enumerate(info[1:,0]):
     results[i + 1,2]=np.log10(np.max(lbol))
     print "lbol_max:", np.max(lbol), t_u[np.argmax(lbol)]
     print i,le.shape, lbol.shape
-    results[i + 1, 4] =nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[0,np.argmax(lbol)],sug_beta[info[i+1,2].split(' ')[0]])[0]
+    results[i + 1, 4] =nickel_mass_khatami(t_u[np.argmax(lbol)], np.max(lbol),le[0,np.argmax(lbol)],sug_beta[info[i+1,2].split(' ')[0]])[0]
     print "M_ni(beta)=", results[i+1,2]
-    beta = np.arange(0, 5, 0.005)
-    m56 = np.zeros(shape=beta.shape)
-    m56_e = np.zeros(shape=beta.shape)
-    # for uu, b in enumerate(beta):
-    #     m56[uu],m56_e[uu]  = nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[np.argmax(lbol)], b)
-    E = np.arange(2.7, 8, 0.1)
-    Mni56 = np.zeros(shape=E.shape)
-    Mni56_e = np.zeros(shape=E.shape)
-    Mni56_std = np.zeros(shape=E.shape)
     lbol=np.reshape(lbol,t_u.shape)
     lbol_t=np.reshape(lbol_t,t_u_t.shape)
     if xx:
@@ -296,34 +285,35 @@ for i,sn_name in enumerate(info[1:,0]):
     else:
         le_t = np.zeros(t_u_t.shape)
         le = np.zeros(t_u.shape)
-    for k, e in enumerate(E):
-        M_ni56, Mni56_e = wheeler_ni56(t_u_t[(t_u_t >= 60) & (t_u_t < 120)], lbol_t[(t_u_t >= 60)& (t_u_t <120) ], 1, e,le_t[(t_u_t >= 60)& (t_u_t <120) ])
-        Mni56_std[k] = np.sqrt(np.std(M_ni56)**2+np.mean(Mni56_e)**2)
-        Mni56[k] = np.mean(M_ni56)
-    M_ej=E[np.argmin(Mni56_std)]
-    E51=1
-    F = 32*(M_ej)/np.sqrt(E51)
-    print Mni56[np.argmin(Mni56_std)], np.min(Mni56_std), E[np.argmin(Mni56_std)], "F:",F
-    results[i + 1, 5] =Mni56[np.argmin(Mni56_std)]
-    results[i + 1,6] =np.min(Mni56_std)
-    results[i + 1, 7] =E[np.argmin(Mni56_std)]
-    for k, b in enumerate(beta):
-        m56[k], m56_e[k]= nickel_mass(t_u[np.argmax(lbol)], np.max(lbol),le[np.argmax(lbol)], b)
-    print "m56, beta", m56[np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))], beta[
-        np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))]
-    results[i + 1, 6] = beta[np.argmin(np.abs(m56 - Mni56[np.argmin(Mni56_std)]))]
+
+    x=[0.1, 3]
+
+    p, p_err = fit_bootstrap(x, t_u_t[(t_u_t >= 60) & (t_u_t < 120)], lbol_t[(t_u_t >= 60)& (t_u_t <120) ],np.clip(le_t[(t_u_t >= 60)& (t_u_t <120) ],a_min=0.0001e42,a_max=1e51), wheelerErr, errfunc=True, perturb=True, n=1000, nproc=4)
+
+    F =32*p[1]
+    print p[0], p_err[0], p[1], "F:",F, 32*p_err[1]
+    results[i + 1, 5] =p[0]
+    results[i + 1,6] =p_err[0]
+    results[i + 1, 7] = p[1]*32
+    results[i + 1, 8] =p[1]
+    plt.figure(2)
+    plt.subplot(3, 6, i + 1)
+    plt.plot(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],wheeler_bol(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],p[0],p[1]),color="orange")
+    beta0=0.3
+    betafit = leastsq(nickel_mass_khatami_err, beta0, args=(t_u[np.argmax(lbol)], np.max(lbol), le[np.argmax(lbol)],p[0],p_err[0]), full_output=0, maxfev=10000000)
+    results[i + 1, 9] = betafit[0][0]
     try:
         ind = prentice_name.index(sn_name.strip('SN'))
-        results[i+1,9]=prentice[ind,2]
-        results[i + 1,10] = prentice[ind, 3]
-        results[i + 1,11] = prentice[ind, 4]
+        results[i+1,10]=prentice[ind,2]
+        results[i + 1,11] = prentice[ind, 3]
+        results[i + 1,12] = prentice[ind, 4]
     except:
         print 'no data'
-    results[i + 1, 12]= valenti_ni56(results[i + 1, 3],10**results[i + 1,2])[0]
+    results[i + 1, 13]= valenti_ni56(results[i + 1, 3],10**results[i + 1,2])[0]
     results[i + 1, 0] =sn_name
     results[i+1,1]=info[i+1,2]
-    if i==17:
-        break
+    # if i==17:
+    #     break
 
 np.savetxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/Results_linear.txt',results,fmt='%12s',delimiter=',')
 #plt.xlabel('Time (days)')
