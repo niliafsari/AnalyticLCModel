@@ -40,6 +40,30 @@ def valenti_ni56(dt,Lbol,E51=0,Mej=0,Le=0):
         M_Ni = np.divide(Lbol,S_Ni+S_Co1+S_Co2+S_Co3)
         M_Ni_e=np.divide(Le,S_Ni+S_Co1+S_Co2+S_Co3)
     return M_Ni/M_sun, M_Ni_e/M_sun
+def valenti_bol(dt,M_Ni,MejE):
+    M_sun=2e33
+    M_Ni=M_Ni*M_sun
+    c=3e10
+    tau_Ni=8.8*86400. # decay time of Ni56 in sec
+    tau_Co=9.822e6 #decay time of Co56 in sec
+    e_Ni=3.90e10 # erg/s/g energy produced by 1 gram of Ni
+    e_Co=6.78e9 #erg/s/g energy produced by 1 gram of Co
+    if (MejE==0.0):
+        Lbol =M_Ni*(e_Ni*np.exp(-dt*86400./tau_Ni)+ e_Co*(np.exp(-dt*86400./tau_Co) - np.exp(-dt*86400./tau_Ni)))
+    else:
+        F = 32*MejE
+        G = 16.1*F
+        Epsilon =  e_Co*(np.exp(-dt*86400./tau_Co) - np.exp(-dt*86400./tau_Ni))
+        S_Ni = e_Ni * np.exp(-dt * 86400. / tau_Ni)
+        S_Co1 = 0.81*Epsilon*(1-np.exp(-(F/dt)**2.))
+        S_Co2 = 0.164*Epsilon*(1-np.exp(-(F/dt)**2.))*(1-np.exp(-(G/dt)**2.))
+        S_Co3 = 0.036*Epsilon*(1-np.exp(-(G/dt)**2.))
+        Lbol = M_Ni*(S_Ni+S_Co1+S_Co2+S_Co3)
+    return Lbol
+
+def valentiErr(p, t, L, L_err):
+    err = (valenti_bol(t, p[0],p[1]) - L)/L_err
+    return np.abs(err)
 
 # ;free parameters
 # M_Ni = double(MNi[0])*M_sun
@@ -93,6 +117,10 @@ def nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta):
 
 def nickel_mass_khatami_err(beta,t_peak,L_peak,L_peak_err,Mni,Mni_err):
     err = (nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta)[0] - Mni)/ np.sqrt(Mni_err**2+nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta)[1]**2)
+    return np.abs(err)
+
+def khatami_err( beta,x,L_peak,L_peak_err):
+    err = (nickel_mass_khatami(x[0], L_peak, L_peak_err, beta)[0] - x[1]) / nickel_mass_khatami(x[0], L_peak, L_peak_err, beta)[1]
     return np.abs(err)
 
 

@@ -46,7 +46,6 @@ def lyman_BC(mag_x, mag_y, x,y, mag_x_e=0, mag_y_e=0):
             mag_x_sam = np.multiply(np.tile(mag_y_e,n), np.random.randn(n,np.shape(mag_y)[1])+np.tile(mag_x,n))
             rms=0.101
             rms_sam=np.multiply(np.tile(rms, (n,np.shape(mag_y)[1])), np.random.randn((n,np.shape(mag_y)[1])))
-        print rms_sam.shape
         BC = np.mean(rms_sam+0.197 -  0.183   * (mag_x_sam -mag_y_sam) - 0.419* (mag_x_sam -mag_y_sam) ** 2, axis=0)
         BC_e = np.std(rms_sam+0.197  -  0.183   * (mag_x_sam -mag_y_sam) -0.419* (mag_x_sam -mag_y_sam) ** 2, axis=0)
     else:
