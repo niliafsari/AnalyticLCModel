@@ -124,6 +124,19 @@ def khatami_err( beta,x,L_peak,L_peak_err):
     return np.abs(err)
 
 
+def power_law(t, t0, a, n):
+    return a * np.sign(t - t0) * (np.abs(t - t0)) ** n
+def powerLawErr(p, t, f, f_err):
+    err = (power_law(t, p[0],p[1],p[2]) - f)/1
+    return np.abs(err)
+
+def benzine(t, tfall,trise, A,B):
+    t0=0
+    return A*(np.exp(-(t-t0)/tfall)/(np.exp((t-t0)/trise)+1))+B
+
+def benzineErr1(p, t, L, L_err):
+    err = (benzine(t, p[0],p[1],p[2], p[3]) - L)/L_err
+    return np.abs(err)
 #equations;;;;;;;;;;;;;;;;;
 
 #Nickel source term:
