@@ -83,6 +83,11 @@ class supernova:
             self.ebv_gal[1] = float(info[index , np.where(info[0,:]=='E(B-V) (S&F2011)')[0][0]].split('(')[1].replace(")", ""))
         else:
             self.ebv_gal[1]=0
+        self.ebv_host[0] = float(info[index , np.where(info[0,:]=='E(B-V)_hostf')[0][0]].split('(')[0])
+        if (len(info[index , np.where(info[0,:]=='E(B-V)_hostf')[0][0]].split('(')) > 1):
+            self.ebv_host[1] = float(info[index , np.where(info[0,:]=='E(B-V)_hostf')[0][0]].split('(')[1].replace(")", ""))
+        else:
+            self.ebv_host[1]=0
         self.source_bc=info[index, np.where(info[0,:]=='source_number')[0][0]].split(',')
         self.smoothing_bc = float(info[index, np.where(info[0, :] == 'smoothing_bc')[0][0]])
         self.t0[0] = float(info[index, np.where(info[0, :] == 't0 (JD)')[0][0]].split('(')[0])-2400000.5
@@ -166,6 +171,72 @@ class supernova:
         print (self.t0)
         self.t0=[p0[0]+t_mjd, p0_err[0]]
         print (self.t0)
+    def drout_color(self,s=0.2):
+        add = []
+        location='./Data/SN_json/'
+        with open(location+self.name+'.json') as data_file:
+            data = json.load(data_file)
+        mag = np.zeros(shape=(0, 4))
+        for dat in data[self.name]["photometry"]:
+           if "band" in dat.keys():
+                if  np.any(np.in1d(dat["band"],self.band_extinction)):
+                    if "e_magnitude" in dat:
+                        error=float(dat["e_magnitude"])
+                    else:
+                        error=0
+                    if np.any(np.in1d(dat["source"].split(','),self.source)):
+                        add = [float(dat["time"]), deredMag(float(dat["magnitude"]), float(self.ebv_gal[0]), coef[dat["band"]]/0.86), np.sqrt(error**2 + ((coef[dat["band"]]/0.86)**2*float(self.ebv_gal[1])**2)), dat["band"]]
+                        add = np.reshape(add, (1, 4))
+                        mag = np.concatenate((mag, add), axis=0)
+        t_u = np.arange(0, 10, 0.1)
+        M_u = np.zeros(shape=(len(self.band_extinction) + 2, np.shape(t_u)[0]))
+        M_e = np.zeros(shape=(len(self.band_extinction) + 2, np.shape(t_u)[0]))
+        for j, band in enumerate(self.band_extinction):
+            t = mag[:, 0][mag[:, 3] == band].astype(float)
+            M = mag[:, 1][mag[:, 3] == band].astype(float)  # type: object
+            Me = mag[:, 2][mag[:, 3] == band].astype(float)
+            M = M[np.argsort(t)]
+            Me = Me[np.argsort(t)]
+            t = t[np.argsort(t)]
+            t, u = np.unique(t, return_index=True)
+            if j==0:
+                t0=t[np.argmin(M[u])]
+            if (self.name=='SN2016gkg'):
+                t0=57668
+            if (self.name=='SN2013df'):
+                t0=56469
+            if (self.name=='SN1993J'):
+                t0=49093
+            t=t-t0
+            fit = ErrorPropagationSpline(t, M[u], Me[u], s=s)
+            M_u[j, :], M_e[j, :] = fit(t_u)
+            if (self.name == 'SN2016gkg'):
+                fit = UnivariateSpline(t, M[u], s=0.02)
+                M_u[j, :] = fit(t_u)
+                M_e[j, :]=0
+        scale=1
+        if (self.band_extinction[0]=='V' ) & (self.band_extinction[1]=='R'):
+            scale=(coef['V']-coef['R'])/0.86
+        if self.verbose:
+            plt.figure(1)
+            plt.plot(t_u, M_u[0, :],'b')
+            plt.plot(t_u, M_u[1, :], 'r')
+            plt.scatter(t,M[u],s=5,color='g',label=self.band_extinction[1])
+            plt.scatter(mag[:, 0][mag[:, 3] == self.band_extinction[0]].astype(float)-t0, mag[:, 1][mag[:, 3] == self.band_extinction[0]].astype(float), s=5,label=self.band_extinction[0])
+            plt.legend()
+            plt.title(self.name)
+            plt.gca().invert_yaxis()
+            plt.figure(2)
+            plt.plot(t_u, M_u[0, :] - M_u[1, :], 'r')
+            plt.title(self.name)
+            plt.show()
+        color_obs=M_u[0, :] - M_u[1, :]
+        color_obs_e=np.sqrt(M_e[0, :]**2+M_e[1, :]**2)
+        print scale,color_obs[np.argmin(np.abs(t_u -10))]
+        self.ebv_host[0]=(color_obs[np.argmin(np.abs(t_u -10))]-0.26)/scale
+        if self.ebv_host[0]<0:
+            self.ebv_host[0]=0
+        self.ebv_host[1]= np.sqrt(color_obs_e[np.argmin(np.abs(t_u -10))]**2+ 0.06**2)
 
     def stritzinger_color(self,s=0.2):
         add = []
@@ -276,11 +347,11 @@ class supernova:
         elif self.name == 'SN1993J':
             t_u = np.arange(10, 100, 0.1)
         elif self.name == 'SN2013df':
-            t_u = np.arange(10, 200, 0.1)
+            t_u = np.arange(15, 200, 0.1)
         elif self.name == 'SN2006jc':
             t_u = np.arange(2, 65, 0.1)
         elif self.name == 'SN1994I':
-            t_u = np.arange(5, 100, 0.1)
+            t_u = np.arange(3, 100, 0.1)
         elif self.name == 'SN2004aw':
             t_u = np.arange(5, 80, 0.1)
         elif self.name == 'SN2009bb':
@@ -295,7 +366,7 @@ class supernova:
             t_u = np.arange(5, 130, 0.1)
         t_u_t = np.clip(t_u, a_min=60, a_max=130)
         if self.name == 'SN2009bb':
-            t_u_t = np.arange(60, 75, 0.1)
+            t_u_t = np.arange(50, 100, 0.1)
         if self.name  == 'SN2002ap':
             t_u_t = np.arange(50, 230, 0.1)
         if self.name  == 'SN2006jc':
@@ -304,11 +375,7 @@ class supernova:
         M_u_t = np.zeros(shape=(len(self.band_bc), np.shape(t_u_t)[0]))
         M_e_t = np.zeros(shape=(len(self.band_bc), np.shape(t_u_t)[0]))
         ub=50
-        # lb=0
-        # if self.name=='SN2011dh':
-        #     ub=50
-        #     lb=2
-        t_u=t_u[(t_u<(ub-5))]
+        t_u=t_u[(t_u<(ub-10))]
         M_u = np.zeros(shape=(len(self.band_bc), np.shape(t_u)[0]))
         M_e = np.zeros(shape=(len(self.band_bc), np.shape(t_u)[0]))
         for j, band in enumerate(self.band_bc):
@@ -321,18 +388,19 @@ class supernova:
             t, u = np.unique(t, return_index=True)
             M=M[u]
             Me=Me[u]
-            fit = ErrorPropagationSpline(t[(t<ub)], M[(t<ub)], Me[(t<ub)], s=0.5)
-            M_u[j, :], M_e[j, :] = fit(t_u)
-            fit_linear = ErrorPropagationLinear(t[(t > 50)], M[(t > 50)], Me[(t > 50)])
-            M_u_t[j, :], M_e_t[j, :] = fit_linear(t_u_t)
             if (self.name == 'SN2016gkg'):
                 fit = UnivariateSpline(t, M[u], s=0.02)
                 M_u[j, :] = fit(t_u)
+            else:
+                fit = ErrorPropagationSpline(t[(t<ub)], M[(t<ub)], Me[(t<ub)], s=2.5)
+                M_u[j, :], M_e[j, :] = fit(t_u)
+            fit_linear = ErrorPropagationLinear(t[(t > 50)], M[(t > 50)], Me[(t > 50)])
+            M_u_t[j, :], M_e_t[j, :] = fit_linear(t_u_t)
         if self.name=='SN2008D':
             M_u[1, :] = M_u[2, :] - 1.2444 * (M_u[2, :] - M_u[1, :]) - 0.3820
             self.band_bc[1]='I'
-        lbol,le=lyman_BC(np.reshape(M_u[0, :],(1,np.shape(M_u[0, :])[0])), np.reshape(M_u[1, :],(1,np.shape(M_u[1, :])[0])),self.band_bc[0],self.band_bc[1])
-        lbol_t,le_t=lyman_BC(np.reshape(M_u_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_u_t[1, :],(1,np.shape(M_u_t[1, :])[0])),self.band_bc[0],self.band_bc[1])
+        lbol,le=lyman_BC(np.reshape(M_u[0, :],(1,np.shape(M_u[0, :])[0])), np.reshape(M_u[1, :],(1,np.shape(M_u[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(M_e[0, :],(1,np.shape(M_e[0, :])[0])), np.reshape(M_e[1, :],(1,np.shape(M_e[1, :])[0])))
+        lbol_t,le_t=lyman_BC(np.reshape(M_u_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_u_t[1, :],(1,np.shape(M_u_t[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(M_e_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_e_t[1, :],(1,np.shape(M_u_t[1, :])[0])))
         lbol = np.reshape(lbol, t_u.shape)
         lbol_t = np.reshape(lbol_t, t_u_t.shape)
         le = np.reshape(le, t_u.shape)
@@ -414,8 +482,13 @@ info=np.array(my_list)
 # sn = supernova('SN2008D')
 # sn.fill(info)
 # index = np.where(info[:, 0] == sn.name)[0][0]
-# sn.stritzinger_color(float(info[index, 6]))
-# #sn.tailNickel()
+# #sn.stritzinger_color(float(info[index, 6]))
+# sn.tailNickel()
+# print "Tail Ni", sn.tail_ni_mass, "Tail Mej/E", sn.tail_meje, "Tail Arnett", sn.arnett_ni_mass, "Lp", sn.peakL, "tp", sn.peakt
+# sn.khatami_model()
+# sn.prentice_data()
+# print "beta", sn.beta_req
+# print "t0", sn.t0
 # ni=np.zeros((2,7))
 # arnett=np.zeros((2,7))
 # for i in np.arange(0,7):
@@ -442,8 +515,8 @@ info=np.array(my_list)
 # print "beta", sn.beta_req
 
 
-for i,sn_name in enumerate(['SN1994I']):
-    if  (sn_name =="SN2006jc") |(sn_name=='SN2002ap') :
+for i,sn_name in enumerate(['SN2016coi']):
+    if  (sn_name =="SN2006jc")  :
          continue
     # if (sn_name!='SN1998bw'):
     #     continue
@@ -451,24 +524,27 @@ for i,sn_name in enumerate(['SN1994I']):
     sn = supernova(sn_name)
     sn.fill(info)
     index = np.where(info[:, 0] == sn.name)[0][0]
-    sn.stritzinger_color(0.3)
-    print "E(B-V)",sn.ebv_host[0]+sn.ebv_gal[0], np.sqrt(sn.ebv_host[1]**2+sn.ebv_gal[0]**2),"host",sn.ebv_host
+    #sn.drout_color(float(info[index, 6]))
+    print "E(B-V)",sn.ebv_host[0]+sn.ebv_gal[0], np.sqrt(sn.ebv_host[1]**2+sn.ebv_gal[1]**2),"host",sn.ebv_host
     sn.tailNickel()
+    print "Tail Ni",sn.tail_ni_mass, "Tail Mej/E",sn.tail_meje, "Tail Arnett",sn.arnett_ni_mass,"Lp", sn.peakL, "tp",sn.peakt
+    #
+
 
 # with open('Data/out.csv','w') as f:
 #     w = csv.DictWriter(f,fieldnames=sorted(vars(sn)))
 #     w.writeheader()
 #     w.writerow({k: getattr(sn, k) for k in vars(sn)})
 #     for i,sn_name in enumerate(info[1:,0]):
-#         if  (sn_name =="SN2006jc") |(sn_name=='SN2002ap') | (sn_name=='SN2008D'):
+#         if  (sn_name =="SN2006jc")  | (sn_name=='SN2008D') | (i>17):
 #              continue
 #         # if (sn_name!='SN1998bw'):
 #         #     continue
 #         print sn_name
 #         sn = supernova(sn_name)
 #         sn.fill(info)
-#         index = np.where(info[:, 0] == sn.name)[0][0]
-#         sn.stritzinger_color(float(info[index, 6]))
+#         # index = np.where(info[:, 0] == sn.name)[0][0]
+#         # sn.stritzinger_color(float(info[index, 6]))
 #         print "host E(B-V)",sn.ebv_host
 #         sn.tailNickel()
 #         print "Tail Ni",sn.tail_ni_mass, "Tail Mej/E",sn.tail_meje, "Tail Arnett",sn.arnett_ni_mass,"Lp", sn.peakL, "tp",sn.peakt
