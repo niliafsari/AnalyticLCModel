@@ -115,8 +115,9 @@ def nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta):
     tau_Ni=8.8*86400. # decay time of Ni56 in sec
     tau_Co = 111.3 * 86400  #decay time of Co56 in sec
     M_sun = 2e33
-    MNi=np.divide(np.multiply(L_peak*(beta**2),(t_peak/8.8)**2),(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))+((e_Co*tau_Co**2/(e_Ni*tau_Ni))*(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3))))))))/M_sun
-    MNi_err=np.divide(np.multiply(L_peak_err*(beta**2),(t_peak/8.8)**2),(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))+((e_Co*tau_Co**2/(e_Ni*tau_Ni))*(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3))))))))/M_sun
+    MNi=np.divide(L_peak*(beta**2)*(t_peak/8.8)**2,(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))
+                                                            +((e_Co*tau_Co**2/(e_Ni*tau_Ni**2))*(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3))))))))/M_sun
+    MNi_err=np.divide(np.multiply(L_peak_err*(beta**2),(t_peak/8.8)**2),(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))+((e_Co*tau_Co**2/(e_Ni*tau_Ni**2))*(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3))))))))/M_sun
     return MNi,MNi_err
 
 def nickel_mass_khatami_err(beta,t_peak,L_peak,L_peak_err,Mni,Mni_err):

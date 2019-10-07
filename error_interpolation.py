@@ -22,7 +22,11 @@ class ErrorPropagationSpline(object):
         """
         x = np.atleast_1d(x)
         s = np.vstack([curve(x, *args, **kwargs) for curve in self._splines])
-        return (np.mean(s, axis=0), np.std(s, axis=0))
+        t=np.arange(10,40,0.01)
+        tpeak_ind = np.vstack([np.argmin(curve(t, *args, **kwargs)) for curve in self._splines])
+        tpeak=t[np.round(np.median(tpeak_ind))]
+        tpeak_err = np.std(np.vstack([t[ind] for ind in tpeak_ind]))
+        return (np.median(s, axis=0), np.std(s, axis=0), tpeak_err)
 
 class ErrorPropagationLinear(object):
     #Does a spline fit, but returns both the spline value and associated uncertainty.
@@ -42,4 +46,4 @@ class ErrorPropagationLinear(object):
         """
         x = np.atleast_1d(x)
         s = np.vstack([np.polyval(curve, x) for curve in self._splines])
-        return (np.mean(s, axis=0), np.std(s, axis=0))
+        return (np.median(s, axis=0), np.std(s, axis=0))
