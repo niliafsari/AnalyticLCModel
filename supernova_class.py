@@ -48,9 +48,7 @@ plt.rc('font',**{'family':'Courier New'})
 SN_verified_t0=['SN2008D','SN2016gkg','SN2011dh','SN2013df','SN1993J','SN1998bw']
 sug_beta={'Ib':1.125, 'Ic':1.125, 'IIb':0.82, 'Ia':1.6}
 coef = {'B': 3.626, 'V': 2.742, 'I': 1.505, "i'": 1.698, "r'": 2.285, "R": 2.169, 'r':2.285}
-import matplotlib.font_manager
-matplotlib.font_manager.findSystemFonts()
-print matplotlib.font_manager.fontManager.ttflist
+
 
 class supernova:
     def __init__(self, name,  host=None,sn_type=None,distance=[None, None], band_extinction=None, band_bc=None , source=None, ebv_gal=[None, None],t0=[None, None] ,ebv_host=[None, None],source_bc=None,smoothing_bc=None):
@@ -69,10 +67,9 @@ class supernova:
         self.smoothing_bc=smoothing_bc
         self.tail_ni_mass=[None, None]
         self.tail_meje=[None, None]
-        self.peakL=None
-        self.peakt=None
-        self.arnett_ni_mass=[None, None]
         self.peakL=[None, None]
+        self.peakt=[None, None]
+        self.arnett_ni_mass=[None, None]
         self.band_t0=None
         self.lb=None
         self.ub=None
@@ -107,11 +104,13 @@ class supernova:
             self.ebv_host[1]=0
         self.source_bc=info[index, np.where(info[0,:]=='source_number')[0][0]].split(',')
         self.smoothing_bc = float(info[index, np.where(info[0, :] == 'smoothing_bc')[0][0]])
-        self.t0[0] = float(info[index, np.where(info[0, :] == 't0 (JD)')[0][0]].split('(')[0])-2400000.5
+        self.t0[0] = float(info[index, np.where(info[0, :] == 't0_fit')[0][0]].split('(')[0])-2400000.5
         if self.name not in SN_verified_t0:
             self.band_t0 = info[index, np.where(info[0, :] == 't0_band')[0][0]]
-        if (len(info[index , np.where(info[0,:]=='t0 (JD)')[0][0]].split('(')) > 1):
-            self.t0[1] = float(info[index , np.where(info[0,:]=='t0 (JD)')[0][0]].split('(')[1].replace(")", ""))
+        if (len(info[index , np.where(info[0,:]=='t0_fit')[0][0]].split('(')) > 1):
+            self.t0[1] = float(info[index , np.where(info[0,:]=='t0_fit')[0][0]].split('(')[1].replace(")", ""))
+        else:
+            self.t0[1] =0.0
         try:
             self.lb = float(info[index, np.where(info[0, :] == 'lb,ub')[0][0]].split(',')[0])
             self.ub = float(info[index, np.where(info[0, :] == 'lb,ub')[0][0]].split(',')[1])
@@ -357,6 +356,8 @@ class supernova:
         s=self.smoothing_bc
         if self.name == 'SN2016gkg':
             t_u = np.arange(10, 100, 0.1)
+        if self.name == 'SN2008ax':
+            t_u = np.arange(10, 130, 0.1)
         elif self.name== 'iPTF13bvn':
             t_u = np.arange(10, 90, 0.1)
         elif self.name== 'SN2008D':
@@ -378,7 +379,7 @@ class supernova:
         elif self.name == 'SN2002ap':
             t_u = np.arange(1, 40, 0.1)
         elif self.name=='SN2007gr':
-            t_u = np.arange(10, 130, 0.1)
+            t_u = np.arange(3, 130, 0.1)
         else:
             t_u = np.arange(5, 130, 0.1)
         t_u_t = np.clip(t_u, a_min=60, a_max=130)
@@ -409,18 +410,17 @@ class supernova:
             if (self.name == 'SN2016gkg'):
                 fit = UnivariateSpline(t, M[u], s=0.02)
                 M_u[j, :] = fit(t_u)
+                tpeak_err[j, :]=4
             else:
                 fit = ErrorPropagationSpline(t[(t<ub)], M[(t<ub)], Me[(t<ub)], s=s)
                 M_u[j, :], M_e[j, :],tpeak_err[j, :] = fit(t_u)
             fit_linear = ErrorPropagationLinear(t[(t > 50)], M[(t > 50)], Me[(t > 50)])
             M_u_t[j, :], M_e_t[j, :] = fit_linear(t_u_t)
-            #print M_e_t
         if self.name=='SN2008D':
             M_u[1, :] = M_u[2, :] - 1.2444 * (M_u[2, :] - M_u[1, :]) - 0.3820
             self.band_bc[1]='I'
         lbol,le=lyman_BC(np.reshape(M_u[0, :],(1,np.shape(M_u[0, :])[0])), np.reshape(M_u[1, :],(1,np.shape(M_u[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(M_e[0, :],(1,np.shape(M_e[0, :])[0])), np.reshape(M_e[1, :],(1,np.shape(M_e[1, :])[0])))
         lbol_t,le_t=lyman_BC(np.reshape(M_u_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_u_t[1, :],(1,np.shape(M_u_t[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(M_e_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_e_t[1, :],(1,np.shape(M_u_t[1, :])[0])))
-        #print le_t
         lbol = np.reshape(lbol, t_u.shape)
         lbol_t = np.reshape(lbol_t, t_u_t.shape)
         le = np.reshape(le, t_u.shape)
@@ -429,26 +429,25 @@ class supernova:
         print tpeak_e
         if self.verbose:
             plt.figure(1)
-            plt.scatter(mag[:, 0][mag[:, 5] == self.band_bc[0]].astype(float) - self.t0[0],
-                        mag[:, 3][mag[:, 5] == self.band_bc[0]].astype(float), label=self.band_bc[0])
-            plt.scatter(mag[:, 0][mag[:, 5] == self.band_bc[1]].astype(float) - self.t0[0],
-                        mag[:, 3][mag[:, 5] == self.band_bc[1]].astype(float), label=self.band_bc[1])
-            plt.scatter(t_u_t, M_u_t[0, :], s=0.5)
-            plt.scatter(t_u_t, M_u_t[1, :], s=0.5)
+            plt.errorbar(mag[:, 0][mag[:, 5] == self.band_bc[0]].astype(float) - self.t0[0],
+                        mag[:, 3][mag[:, 5] == self.band_bc[0]].astype(float), yerr=mag[:, 4][mag[:, 5] == self.band_bc[0]].astype(float),fmt='o', lw=0.2, label=self.band_bc[0],color='r', ls='none',markersize=2.5)
+            plt.errorbar(mag[:, 0][mag[:, 5] == self.band_bc[1]].astype(float) - self.t0[0],
+                        mag[:, 3][mag[:, 5] == self.band_bc[1]].astype(float),yerr=mag[:, 4][mag[:, 5] == self.band_bc[1]].astype(float),fmt='o', lw=0.2, label=self.band_bc[1],color='b', ls='none',markersize=2.5)
+            plt.plot(t_u, M_u[0, :], lw=1,color='maroon', label='fit '+self.band_bc[0])
+            #plt.fill_between(t_u,M_u[0, :]-M_e[0, :],M_u[0, :]+M_e[0, :],alpha=0.3,facecolor='r',edgecolor='tomato')
+            plt.plot(t_u, M_u[1, :], lw=1,color='navy', label='fit '+self.band_bc[1])
+            #plt.fill_between(t_u, M_u[1, :] - M_e[1, :], M_u[1, :] + M_e[1, :], alpha=0.3, facecolor='b',edgecolor='lightblue')
+            plt.plot(t_u_t, M_u_t[0, :], lw=1,color='maroon')
+            plt.plot(t_u_t, M_u_t[1, :], lw=1,color='navy')
+            plt.xlabel(r'Time (days)', fontname='Sans')
+            plt.ylabel(r'$\rm M_{\rm bol}(\rm mag)$')
+            plt.gca().yaxis.set_minor_locator(AutoMinorLocator(5))
+            plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
             plt.legend()
             plt.title(self.name)
             plt.gca().invert_yaxis()
+            plt.savefig('./Plots/'+self.name+'_mag.pdf')
             plt.figure(2)
-            plt.scatter(mag[:, 0][mag[:, 5] == self.band_bc[0]].astype(float) - self.t0[0],
-                        mag[:, 3][mag[:, 5] == self.band_bc[0]].astype(float), label=self.band_bc[0])
-            plt.scatter(mag[:, 0][mag[:, 5] == self.band_bc[1]].astype(float) - self.t0[0],
-                        mag[:, 3][mag[:, 5] == self.band_bc[1]].astype(float), label=self.band_bc[1])
-            plt.scatter(t_u, M_u[0, :], s=0.5)
-            plt.scatter(t_u, M_u[1, :], s=0.5)
-            plt.legend()
-            plt.title(self.name)
-            plt.gca().invert_yaxis()
-            plt.figure(3)
             plt.plot(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)], color="orange")
             plt.fill_between(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)]-le_t[(t_u_t >= 60) & (t_u_t < 120)],
             lbol_t[(t_u_t >= 60) & (t_u_t < 120)] + le_t[(t_u_t >= 60) & (t_u_t < 120)],alpha=0.5, edgecolor='#CC4F1B', facecolor='#FF9848')
@@ -459,13 +458,18 @@ class supernova:
             plt.gca().yaxis.set_minor_locator(AutoMinorLocator(5))
             plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
             plt.title(self.name)
+            plt.savefig('./Plots/'+self.name+'_Lbol.pdf')
             plt.show()
 
-        self.peakt = t_u[np.argmax(lbol)]
+        self.peakt[0] = t_u[np.argmax(lbol)]
         self.peakL[0]= np.log10(np.max(lbol))
         self.peakL[1]=np.log10(le[np.argmax(lbol)])
-        n=100
-        s = np.random.normal(0, tpeak_e, n)
+        if (self.name in SN_verified_t0):
+            n=1
+            s = [0]
+        else:
+            n=100
+            s = np.random.normal(0, self.t0[1], n)
         p=np.zeros(shape=(2,n))
         p_err = np.zeros(shape=(2, n))
         for k,offset in enumerate(s):
@@ -476,14 +480,21 @@ class supernova:
             p_err[:,k]=x_err
         self.tail_ni_mass=[np.mean(p[0,:]), np.sqrt(np.mean(p_err[0,:])**2+np.std(p[0,:])**2)]
         self.tail_meje=[np.mean(p[1,:]), np.sqrt(np.mean(p_err[1,:])**2+np.std(p[1,:])**2)]
-        self.arnett_ni_mass=list(valenti_ni56(self.peakt,10**self.peakL[0],0,0,10**self.peakL[1]))
+        self.peakt[1]=np.sqrt(self.t0[1]**2+tpeak_e**2)
+        n=100
+        s = np.random.normal(0, self.peakt[1], n)
+        p=np.zeros(n)
+        p_err = np.zeros(n)
+        for k,offset in enumerate(s):
+            p[ k], p_err[ k]=valenti_ni56((self.peakt[0]+offset),10**self.peakL[0],0,0,10**self.peakL[1])
+        self.arnett_ni_mass=[np.mean(p), np.sqrt(np.mean(p_err)**2+np.std(p)**2)]
     def khatami_model(self):
-        beta0 = 0.3
-        betafit = fit_bootstrap([0.3], [self.peakt, self.tail_ni_mass[0]],[10**self.peakL[0]],[10**self.peakL[1]], khatami_err,
+        beta0 = 0.9
+        betafit = fit_bootstrap([0.3], [self.peakt[0], self.tail_ni_mass[0]],[10**self.peakL[0]],[10**self.peakL[1]], khatami_err,
                                  errfunc=True, perturb=True, n=1000, nproc=4)
         self.beta_req= [betafit[0][0],betafit[1][0]]
     def khatami_model_litbeta(self):
-        self.ni_khatami=nickel_mass_khatami(sn.peakt, 10 ** sn.peakL[0], 10 ** sn.peakL[1], sug_beta[self.sn_type])
+        self.ni_khatami=nickel_mass_khatami(sn.peakt[0], 10 ** sn.peakL[0], 10 ** sn.peakL[1], sug_beta[self.sn_type])
     def prentice_data(self):
         url='https://docs.google.com/spreadsheets/d/e/2PACX-1vTRiEGa3J6bnG5R4JhDz6Wx2gb_KK9TnRdkn5YdWIoar6_ugH1p42KYLkDMHiMjjOUxXPxaPH22wjRN/pub?gid=0&single=true&output=csv'
         with requests.Session() as s:
@@ -509,6 +520,7 @@ class supernova:
             self.prentice_ni = None
 
 
+
 plt.close("all")
 url='https://docs.google.com/spreadsheets/d/e/2PACX-1vS3r49T74bVSHHYNJrkSwcc7O7-nXdmd9ERmfdO8lNKAocdrhjT4H7znvILr8nN8BERXZpM2_cx3ge0/pub?gid=0&single=true&output=csv'
 with requests.Session() as s:
@@ -518,15 +530,15 @@ with requests.Session() as s:
     my_list = list(cr)
 info=np.array(my_list)
 
-sn = supernova('SN2008D')
-sn.fill(info)
-index = np.where(info[:, 0] == sn.name)[0][0]
-#sn.stritzinger_color(float(info[index, 6]))
-sn.tailNickel()
-print "Tail Ni", sn.tail_ni_mass, "Tail Mej/E", sn.tail_meje, "Tail Arnett", sn.arnett_ni_mass, "Lp", sn.peakL, "tp", sn.peakt
-sn.khatami_model()
-sn.khatami_model_litbeta()
-sn.prentice_data()
+# sn = supernova('SN2008D')
+# sn.fill(info)
+# index = np.where(info[:, 0] == sn.name)[0][0]
+# #sn.stritzinger_color(float(info[index, 6]))
+# sn.tailNickel()
+# print "Tail Ni", sn.tail_ni_mass, "Tail Mej/E", sn.tail_meje, "Tail Arnett", sn.arnett_ni_mass, "Lp", sn.peakL, "tp", sn.peakt
+# sn.khatami_model()
+# sn.khatami_model_litbeta()
+# sn.prentice_data()
 
 # print "beta", sn.beta_req
 # print "t0", sn.t0
@@ -556,46 +568,48 @@ sn.prentice_data()
 # print "beta", sn.beta_req
 
 
-# for i,sn_name in enumerate(['SN2013df']):
-#     if  (sn_name =="SN2006jc")  :
-#          continue
-#     # if (sn_name!='SN1998bw'):
-#     #     continue
-#     print sn_name
-#     sn = supernova(sn_name)
-#     sn.fill(info)
-#     index = np.where(info[:, 0] == sn.name)[0][0]
-#     #sn.drout_color(float(info[index, 6]))
-#     print "E(B-V)",sn.ebv_host[0]+sn.ebv_gal[0], np.sqrt(sn.ebv_host[1]**2+sn.ebv_gal[1]**2),"host",sn.ebv_host
-#     sn.tailNickel()
-#     print "Tail Ni",sn.tail_ni_mass, "Tail Mej/E",sn.tail_meje, "Tail Arnett",sn.arnett_ni_mass,"Lp", sn.peakL, "tp",sn.peakt
-#     sn.khatami_model()
-#     sn.khatami_model_litbeta()
-#     print sn.ni_khatami
-#     print sn.beta_req
-
-
-with open('Data/out_new1.csv','w') as f:
-    w = csv.DictWriter(f,fieldnames=sorted(vars(sn)))
-    w.writeheader()
-    w.writerow({k: getattr(sn, k) for k in vars(sn)})
-    for i,sn_name in enumerate(info[1:,0]):
-        if  (sn_name =="SN2006jc")  | (sn_name=='SN2008D') | (i>17):
-             continue
-        print sn_name
-        sn = supernova(sn_name)
-        sn.fill(info)
-        # index = np.where(info[:, 0] == sn.name)[0][0]
-        # sn.stritzinger_color(float(info[index, 6]))
-        print "host E(B-V)",sn.ebv_host
-        sn.tailNickel()
-        print "Tail Ni",sn.tail_ni_mass, "Tail Mej/E",sn.tail_meje, "Tail Arnett",sn.arnett_ni_mass,"Lp", sn.peakL, "tp",sn.peakt
-        sn.khatami_model()
-        sn.khatami_model_litbeta()
-        sn.prentice_data()
-        print "beta",sn.beta_req
-        print "t0",sn.t0
+for i,sn_name in enumerate(['SN2007gr']):
+    if  (sn_name =="SN2006jc")  :
+         continue
+    print sn_name
+    sn = supernova(sn_name)
+    sn.fill(info)
+    index = np.where(info[:, 0] == sn.name)[0][0]
+    #sn.drout_color(float(info[index, 6]))
+    print "E(B-V)",sn.ebv_host[0]+sn.ebv_gal[0], np.sqrt(sn.ebv_host[1]**2+sn.ebv_gal[1]**2),"host",sn.ebv_host, "t0", sn.t0
+    sn.tailNickel()
+    print "Tail Ni",sn.tail_ni_mass, "Tail Mej/E",sn.tail_meje, "Tail Arnett",sn.arnett_ni_mass,"Lp", sn.peakL, "tp",sn.peakt
+    sn.khatami_model()
+    sn.khatami_model_litbeta()
+    print sn.ni_khatami
+    print sn.beta_req
+    with open('Data/'+sn.name+'_results.csv', 'w') as f:
+        w = csv.DictWriter(f, fieldnames=sorted(vars(sn)))
+        w.writeheader()
         w.writerow({k: getattr(sn, k) for k in vars(sn)})
+
+
+# with open('Data/out_new1.csv','w') as f:
+#     w = csv.DictWriter(f,fieldnames=sorted(vars(sn)))
+#     w.writeheader()
+#     w.writerow({k: getattr(sn, k) for k in vars(sn)})
+#     for i,sn_name in enumerate(info[1:,0]):
+#         if  (sn_name =="SN2006jc")  | (sn_name=='SN2008D') | (i>17):
+#              continue
+#         print sn_name
+#         sn = supernova(sn_name)
+#         sn.fill(info)
+#         # index = np.where(info[:, 0] == sn.name)[0][0]
+#         # sn.stritzinger_color(float(info[index, 6]))
+#         print "host E(B-V)",sn.ebv_host
+#         sn.tailNickel()
+#         print "Tail Ni",sn.tail_ni_mass, "Tail Mej/E",sn.tail_meje, "Tail Arnett",sn.arnett_ni_mass,"Lp", sn.peakL, "tp",sn.peakt
+#         sn.khatami_model()
+#         sn.khatami_model_litbeta()
+#         sn.prentice_data()
+#         print "beta",sn.beta_req
+#         print "t0",sn.t0
+#         w.writerow({k: getattr(sn, k) for k in vars(sn)})
 
 
 # filename = 'Data/out_new1.csv'

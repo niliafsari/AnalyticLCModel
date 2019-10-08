@@ -46,4 +46,4 @@ class ErrorPropagationLinear(object):
         """
         x = np.atleast_1d(x)
         s = np.vstack([np.polyval(curve, x) for curve in self._splines])
-        return (np.median(s, axis=0), np.std(s, axis=0))
+        return (np.mean(s, axis=0), np.std(s, axis=0))
