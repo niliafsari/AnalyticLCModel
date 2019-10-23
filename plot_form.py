@@ -35,7 +35,7 @@ matplotlib.rcParams['ytick.minor.size'] = 2
 matplotlib.rcParams['ytick.minor.width'] = 1.5
 matplotlib.rcParams.update({'font.size': 14})
 plt.rc('text', usetex=True)
-marker = itertools.cycle(('8', 'p','>','^','v','<','s', 'o','h','<'))
+marker = itertools.cycle(('8', 'p','>','^','v','<','s', 'o','h','<','*'))
 colors = itertools.cycle(("black","salmon","yellow","green","m","sienna","gray","blue",
                           "darkkhaki","peru","gold","deepskyblue","olive"))
 
@@ -61,14 +61,14 @@ f7 = plt.figure(7)
 ax7=plt.subplot(111)
 f8 = plt.figure(8)
 ax8=plt.subplot(111)
-dict={'Ic':'blue', 'Ib':'red','IcBL':'yellow', 'IcGRB':'yellow','IIb':'green', 'Ibn':'red'}
+dict={'Ic':'blue', 'Ib':'red','Ic-BL':'yellow', 'IcGRB':'yellow','IIb':'green', 'Ibn':'red'}
 # Load all rows from the file into a variable called rows
 yflag=0
 gflag=0
 rflag=0
 bflag=0
 line=0
-with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/data_formated.csv", "r") as f_input:
+with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata.csv", "r") as f_input:
     csv_reader = csv.reader(f_input, delimiter=",")
     rows = list(csv_reader)
     for row in rows:
@@ -96,8 +96,8 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/data_formated.csv",
             ni.append(row[index_tail_ni_mass].split(";")[0])
             ax.errorbar(float(row[index_tail_ni_mass].split(";")[0]),float(row[index_arnett_ni_mass].split(";")[0]),
                         xerr=float(row[index_tail_ni_mass].split(";")[1])*5,
-                        yerr=float(row[index_arnett_ni_mass].split(";")[1]),markersize,
-                        marker=mark,color=col,label=row[index_name], linewidth=0.4, elinewidth=0.5)
+                        yerr=float(row[index_arnett_ni_mass].split(";")[1]),
+                        marker=mark,color=dict[row[index_sn_type]],label=row[index_name], linewidth=0.4, elinewidth=0.5)
             ax7.scatter(float(row[index_tail_ni_mass].split(";")[0]), float(row[index_beta_req].split(";")[0]), s=10, marker=mark, color=col, label=row[index_name], edgecolors='black',
                        linewidth=0.2)
             ax8.scatter(float(row[index_tail_ni_mass].split(";")[0]), float(row[index_ni_khatami].strip("(").strip(")").split(";")[0]), s=10, marker=mark, color=col, label=row[index_name], edgecolors='black',
@@ -130,27 +130,27 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/data_formated.csv",
                        linewidth=0.2)
 #
 #
-plt.figure(1)
-ax.legend(loc='best', bbox_to_anchor=(1.3, -0.2),
-          fancybox=True, ncol=3, fontsize =10)
-plt.plot(np.arange(0, 0.8, 0.1),np.arange(0, 0.8, 0.1),'--',color='black',linewidth=1)
+plt.figure(1,figsize=(10,10))
+ax.legend(loc='best',bbox_to_anchor=(1.9, 1),
+          fancybox=True, ncol=2, fontsize =7)
+plt.plot(np.arange(0, 1, 0.1),np.arange(0, 1, 0.1),'--',color='black',linewidth=1)
 ax.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax.xaxis.set_minor_locator(AutoMinorLocator(5))
 # ax.xaxis.set_tick_params(width=1.5)
 # ax.yaxis.set_tick_params(width=1.5)
 ax.set_ylabel(r'Arnett $\rm M_{Ni} \ (M_\odot$)')
 ax.set_xlabel(r'Tail $\rm M_{Ni} \ (M_\odot$)')
-plt.xlim(0, 0.7)
-plt.ylim(0, 0.7)
-ax.xaxis.set_ticks(np.arange(0, 0.8, 0.1))
-ax.yaxis.set_ticks(np.arange(0, 0.8, 0.1))
+plt.xlim(0, 0.9)
+plt.ylim(0, 0.9)
+ax.xaxis.set_ticks(np.arange(0, 1, 0.1))
+ax.yaxis.set_ticks(np.arange(0, 1, 0.1))
 plt.tight_layout()
 ax.set_aspect('equal', adjustable='box')
 f.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Arnett_Tail1.pdf', bbox_inches='tight')
 #
 #
 ax2.legend(loc='best', bbox_to_anchor=(1.3, -0.2),
-          fancybox=True, ncol=3, fontsize =10)
+          fancybox=True, ncol=4, fontsize =10)
 ax2.plot(np.arange(0, 0.8, 0.1),np.arange(0, 0.8, 0.1),'--',color='black',linewidth=1)
 
 ax2.yaxis.set_minor_locator(AutoMinorLocator(5))
