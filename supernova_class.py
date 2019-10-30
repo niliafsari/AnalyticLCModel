@@ -54,6 +54,7 @@ class supernova:
     def __init__(self, name,  host=None,sn_type=None,distance=[None, None], band_extinction=None, band_bc=None , source=None, ebv_gal=[None, None],t0=[None, None] ,ebv_host=[None, None],source_bc=None,smoothing_bc=None):
         self.name=name
         self.sn_type=sn_type
+        self.sn_type_full = sn_type
         self.host=host
         self.distance=distance
         self.band_extinction=band_extinction
@@ -82,6 +83,7 @@ class supernova:
         with open(location + self.name  + '.json') as data_file:
             data = json.load(data_file)
         index=np.where(info[:,0]==self.name)[0][0]
+        self.sn_type_full = info[index, np.where(info[0, :] == 'Type')[0][0]]
         self.sn_type = info[index , np.where(info[0,:]=='Type')[0][0]].split(' ')[0]
         self.host = info[index, np.where(info[0,:]=='Host')[0][0]]
         self.distance[0] = float(info[index , np.where(info[0,:]=='luminosity distance')[0][0]].split('(')[0])*1e6
@@ -456,7 +458,7 @@ class supernova:
         elif self.name== 'SN2008D':
             t_u = np.arange(10, 120, 0.1)
         elif self.name == 'SN1993J':
-            t_u = np.arange(10, 100, 0.1)
+            t_u = np.arange(15, 100, 0.1)
         elif self.name == 'SN2013df':
             t_u = np.arange(20, 200, 0.1)
         elif self.name == 'SN2006jc':
@@ -464,23 +466,25 @@ class supernova:
         elif self.name == 'SN1994I':
             t_u = np.arange(3, 100, 0.1)
         elif self.name == 'SN2004aw':
-            t_u = np.arange(5, 80, 0.1)
+            t_u = np.arange(10, 100, 0.1)
         elif self.name == 'SN2009bb':
             t_u = np.arange(3, 45, 0.1)
         elif self.name == 'SN2007ru':
             t_u = np.arange(3, 190, 0.1)
         elif self.name == 'SN2002ap':
-            t_u = np.arange(1, 40, 0.1)
+            t_u = np.arange(10, 230, 0.1)
         elif self.name=='SN2007gr':
             t_u = np.arange(3, 130, 0.1)
         elif self.name=='SN1996cb':
-            t_u = np.arange(3, 100, 0.1)
+            t_u = np.arange(10, 100, 0.1)
         elif self.name=='SN2006el':
             t_u = np.arange(12, 130, 0.1)
         elif self.name=='SN2011bm':
             t_u = np.arange(10, 130, 0.1)
         elif self.name=='SN2005bf':
             t_u = np.arange(30, 140, 0.1)
+        elif self.name=='SN2004gq':
+            t_u = np.arange(9, 140, 0.1)
         elif self.name=='SN2009jf':
             t_u = np.arange(10, 140, 0.1)
         elif self.name=='SN2003jd':
@@ -491,7 +495,7 @@ class supernova:
             t_u_t = np.clip(t_u, a_min=50, a_max=130)
         elif self.name=='SN2013df':
             t_u_t = np.clip(t_u, a_min=40, a_max=200)
-        elif self.name=='SN2006ep':
+        elif (self.name=='SN2006ep'):
             t_u_t = np.clip(t_u, a_min=40, a_max=200)
         elif self.name=='SN2007ru':
             t_u_t = np.clip(t_u, a_min=60, a_max=200)
@@ -500,7 +504,7 @@ class supernova:
         if self.name == 'SN2009bb':
             t_u_t = np.arange(50, 100, 0.1)
         if self.name  == 'SN2002ap':
-            t_u_t = np.arange(38, 230, 0.1)
+            t_u_t = np.arange(50, 230, 0.1)
         if self.name  == 'SN2006jc':
             t_u_t = np.arange(50, 100, 0.1)
         if self.name=='SN2005bf':
@@ -520,7 +524,7 @@ class supernova:
         elif (self.name=='SN2009jf'):
             ub=50
             t_u=t_u[(t_u<(ub-10))]
-        elif (self.name=='SN2003jd'):
+        elif (self.name=='SN2003jd') | (self.name=='SN1993J')| (self.name=='SN2006T') | (self.name=='SN2013df') | (self.name=='SN2004gq'):
             ub=40
             t_u=t_u[(t_u<(ub-10))]
         else:
@@ -548,7 +552,7 @@ class supernova:
                 if (self.name=='SN2006el' )| (self.name=='SN2011bm') | (self.name=='SN2003jd'):
                     Me=Me/5
                 #print M,t
-                fit = ErrorPropagationSpline(t[(t<ub)], M[(t<ub)], Me[(t<ub)], s=1)
+                fit = ErrorPropagationSpline(t[(t<ub)], M[(t<ub)], Me[(t<ub)], s=s)
                 M_u[j, :], M_e[j, :],tpeak_err[j, :] = fit(t_u)
             fit_linear = ErrorPropagationLinear(t[(t > np.min(t_u_t)) & (t<np.max(t_u_t))], M[(t > np.min(t_u_t))& (t<np.max(t_u_t))], Me[(t > np.min(t_u_t))& (t<np.max(t_u_t))])
             M_u_t[j, :], M_e_t[j, :] = fit_linear(t_u_t)
@@ -611,19 +615,19 @@ class supernova:
         p_err = np.zeros(shape=(2, n))
         for k,offset in enumerate(s):
             x, x_err = fit_bootstrap([0.1, 3], t_u_t[(t_u_t >= 60) & (t_u_t < 120)]+offset, lbol_t[(t_u_t >= 60) & (t_u_t < 120)],
-                                     np.clip(le_t[(t_u_t >= 60) & (t_u_t < 120)], a_min=0.0001e42, a_max=1e51), valentiErr,
+                                     np.clip(le_t[(t_u_t >= 60) & (t_u_t < 120)], a_min=0.0001e42, a_max=1e51), wheelerErr,
                                      errfunc=True, perturb=True, n=1000, nproc=4)
             p[:,k]=x
             p_err[:,k]=x_err
         self.tail_ni_mass=[np.mean(p[0,:]), np.sqrt(np.mean(p_err[0,:])**2+np.std(p[0,:])**2)]
         self.tail_meje=[np.mean(p[1,:]), np.sqrt(np.mean(p_err[1,:])**2+np.std(p[1,:])**2)]
         self.peakt[1]=np.sqrt(self.t0[1]**2+tpeak_e**2)
-        n=100
+        n=10
         s = np.random.normal(0, self.peakt[1], n)
         p=np.zeros(n)
         p_err = np.zeros(n)
         for k,offset in enumerate(s):
-            p[ k], p_err[ k]=valenti_ni56((self.peakt[0]+offset),10**self.peakL[0],0,0,10**self.peakL[1])
+            p[ k], p_err[ k]=wygoda_ni56((self.peakt[0]+offset),10**self.peakL[0],0,0,10**self.peakL[1])
         self.arnett_ni_mass=[np.mean(p), np.sqrt(np.mean(p_err)**2+np.std(p)**2)]
         if 0:
             import matplotlib.gridspec as gridspec
@@ -647,48 +651,63 @@ class supernova:
             #plt.xlabel(r'MJD $-$ \ {}'.format(np.round(self.t0[0],2)), fontname='Sans')
             plt.ylabel(r'$\rm M_{\rm abs} \ (\rm mag)$')
             plt.gca().yaxis.set_minor_locator(AutoMinorLocator(5))
-
+            plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
             plt.gca().set_xlim([-5, 140])
-            plt.gca().set_ylim([-18, -13.3])
+            plt.gca().set_ylim([np.min(mag[:, 3][mag[:, 5] == self.band_bc[1]].astype(float))-1, np.max(mag[:, 3][mag[:, 5] == self.band_bc[1]].astype(float))-1])
             ax.set_xticklabels([])
             plt.legend()
             plt.title(self.name, position=(0.5, 0.9))
             plt.gca().invert_yaxis()
             plt.subplots_adjust(wspace=0.0, hspace=0.0)
-            plt.subplot(gs1[1])
-            plt.plot(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)]/1e42, color="olive", lw=2)
+            ax.xaxis.set_ticks_position('both')
+            ax.yaxis.set_ticks_position('both')
+            ax.tick_params(direction='in', which='both')
+            ax1=plt.subplot(gs1[1])
+            plt.plot(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)]/1e42, color="k", lw=2)
             plt.fill_between(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)]/1e42-le_t[(t_u_t >= 60) & (t_u_t < 120)]/1e42,
-            lbol_t[(t_u_t >= 60) & (t_u_t < 120)] /1e42+ le_t[(t_u_t >= 60) & (t_u_t < 120)]/1e42,alpha=0.5, edgecolor="olive", facecolor='palegoldenrod',lw=2)
-            plt.plot(t_u,lbol/1e42, color="olive", lw=2)
-            plt.fill_between(t_u,lbol /1e42- le/1e42, lbol/1e42 + le/1e42, alpha=0.5,  edgecolor="olive", facecolor='palegoldenrod',lw=2)
+            lbol_t[(t_u_t >= 60) & (t_u_t < 120)] /1e42+ le_t[(t_u_t >= 60) & (t_u_t < 120)]/1e42,alpha=1, edgecolor="k", facecolor='whitesmoke',lw=1)
+            plt.plot(t_u,lbol/1e42, color="k", lw=1)
+            plt.fill_between(t_u,lbol /1e42- le/1e42, lbol/1e42 + le/1e42, alpha=1,  edgecolor="k", facecolor='whitesmoke',lw=1)#edgecolor="olive", facecolor='palegoldenrod',lw=2)
             plt.plot(np.arange(-5,self.peakt[0],0.1), np.repeat(10**self.peakL[0]/1e42,np.arange(-5,self.peakt[0],0.1).shape), color="orange", lw=2)
             plt.fill_between(np.arange(-5,self.peakt[0],0.1),np.repeat(10**self.peakL[0],np.arange(-5,self.peakt[0],0.1).shape)/1e42-np.repeat(10**self.peakL[1],np.arange(-5,self.peakt[0],0.1).shape)/1e42, np.repeat(10**self.peakL[0],np.arange(-5,self.peakt[0],0.1).shape)/1e42+np.repeat(10**self.peakL[1]/1e42,np.arange(-5,self.peakt[0],0.1).shape), alpha=0.1,  edgecolor="orange", facecolor='yellow',lw=2)
             #plt.plot(np.arange(-5,self.peakt[0],0.1), np.repeat(10**self.peakL[0]/1e42,np.arange(-5,self.peakt[0],0.1).shape), color="orange", lw=2)
             plt.plot(np.repeat(self.peakt[0],np.arange(0,10**self.peakL[0]/1e42,0.01).shape),np.arange(0,10**self.peakL[0]/1e42,0.01),color='orange',lw=2)
             plt.fill_betweenx(np.arange(0,10**self.peakL[0]/1e42,0.1),np.repeat(self.peakt[0],np.arange(0,10**self.peakL[0]/1e42,0.1).shape)-np.repeat(self.peakt[1],np.arange(0,10**self.peakL[0]/1e42,0.1).shape), np.repeat(self.peakt[0],np.arange(0,10**self.peakL[0]/1e42,0.1).shape)+np.repeat(self.peakt[1],np.arange(0,10**self.peakL[0]/1e42,0.1).shape), alpha=0.1,  edgecolor="orange", facecolor='yellow',lw=2)
-            plt.plot(np.repeat(0,np.arange(0,2.4,0.01).shape),np.arange(0,2.4,0.01), color="mediumturquoise", lw=2)
-            plt.fill_betweenx(np.arange(0,2.4,0.01),np.repeat(0,np.arange(0,2.4,0.01).shape)-np.repeat(self.t0[1],np.arange(0,2.4,0.01).shape),np.repeat(0,np.arange(0,2.4,0.01).shape)+np.repeat(self.t0[1],np.arange(0,2.4,0.01).shape), alpha=0.4,  edgecolor="mediumturquoise", facecolor='lightcyan',lw=2.5)
-
+            plt.plot(np.repeat(0,np.arange(0,10**self.peakL[0]/1e42+1,0.01).shape),np.arange(0,10**self.peakL[0]/1e42+1,0.01), color="mediumturquoise", lw=2)
+            plt.fill_betweenx(np.arange(0,10**self.peakL[0]/1e42+1,0.01),np.repeat(0,np.arange(0,10**self.peakL[0]/1e42+1,0.01).shape)-np.repeat(self.t0[1],np.arange(0,10**self.peakL[0]/1e42+1,0.01).shape),np.repeat(0,np.arange(0,10**self.peakL[0]/1e42+1,0.01).shape)+np.repeat(self.t0[1],np.arange(0,10**self.peakL[0]/1e42+1,0.01).shape), alpha=0.4,  edgecolor="mediumturquoise", facecolor='lightcyan',lw=2.5)
+            plt.plot (t_u_t[::5], valenti_bol(t_u_t[::5],self.tail_ni_mass[0],self.tail_meje[0])/1e42,'r',ls='-.' , alpha=1,lw=2.5,label=r'$^{56}$Ni model')
+            plt.legend(loc='upper right',fontsize=14)
+            #plt.plot(t_u_t, valenti_bol(t_u_t, self.tail_ni_mass[0], self.tail_meje[0]-1) / 1e42, 'b')
+            #plt.plot(t_u_t, valenti_bol(t_u_t, self.tail_ni_mass[0]+0.2, self.tail_meje[0]-1) / 1e42, 'pink')
             plt.xlabel(r'MJD $-$ \ {}'.format(np.round(self.t0[0],2)), fontname='Sans')
             plt.ylabel(r'$\rm L_{\rm bol} \ (\rm 10^{42} \ erg \ s^{-1})$')
+            plt.annotate(r'M$_{\rm Ni} \simeq$ '+str(np.around(self.tail_ni_mass[0],decimals=3)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
+                         + r'\ $\rm M_\odot$$ \\ \rm M_{ej} / \sqrt{E_{51}} \simeq$ '+str(np.around(self.tail_meje[0],decimals=3)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
+                         +r' \rm $\rm M_\odot/\sqrt{ \rm foe}$',
+                         xy=(30, (10**self.peakL[0]/1e42)/2),
+                         xycoords='data',
+                         textcoords='offset points',fontsize=16)
             plt.annotate(r'L$_p$',
-                         xy=(5, 2),
+                         xy=(1, 10**self.peakL[0]/1e42),
                          xycoords='data',
                          textcoords='offset points',fontsize=18)
             plt.gca().set_xlim([-5, 140])
             plt.annotate(r't$_p$',
-                         xy=(17, 0.8),
+                         xy=(self.peakt[0]-2, (10**self.peakL[0]/1e42)/3),
                          xycoords='data',
                          textcoords='offset points',fontsize=18)
             plt.annotate(r't$_0$',
-                         xy=(0.7, 0.8),
+                         xy=(0.7, (10**self.peakL[0]/1e42)/3),
                          xycoords='data',
                          textcoords='offset points',fontsize=18)
 
             plt.gca().set_xlim([-5, 140])
-            plt.gca().set_ylim([0, 2.4])
+            plt.gca().set_ylim([0, 10**self.peakL[0]/1e42+0.6])
             plt.gca().yaxis.set_minor_locator(AutoMinorLocator(5))
-            plt.gca().xaxis.set_minor_locator(AutoMinorLocator(10))
+            plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
+            ax1.xaxis.set_ticks_position('both')
+            ax1.yaxis.set_ticks_position('both')
+            ax1.tick_params(direction='in', which='both')
             plt.subplots_adjust(wspace=0.0, hspace=0.0)
             #plt.tight_layout()
             plt.savefig('./Plots/'+self.name+'_lbolphot.pdf')
@@ -783,8 +802,8 @@ info=np.array(my_list)
 # plt.plot(np.arange(0.05,1.5,0.05),ni)
 # plt.show()
 
-for i,sn_name in enumerate(['SN2003jd']):
-    if  ((sn_name =="SN2006jc")) :#| (i<18) | (i>27):
+for i,sn_name in enumerate(info[1:,0]):
+    if  (i>28) :
          continue
     print sn_name
     sn = supernova(sn_name)
@@ -800,7 +819,7 @@ for i,sn_name in enumerate(['SN2003jd']):
     print sn.ni_khatami
     print sn.beta_req
     sn.prentice_data()
-    with open('Data/'+sn.name+'_results.csv', 'w') as f:
+    with open('Data/'+sn.name+'_results_wygoda.csv', 'w') as f:
         w = csv.DictWriter(f, fieldnames=sorted(vars(sn)))
         w.writeheader()
         w.writerow({k: getattr(sn, k) for k in vars(sn)})
