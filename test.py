@@ -24,20 +24,33 @@ sys.path.insert(0, '/home/afsari/')
 from SNAP5.Analysis import *
 from lyman_BC import  *
 
-data = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SN2003jd_lcophot.csv', delimiter=',',
-                  usecols=(0, 1, 2))
-data=data.reshape((data.shape[0], 3))
-filter = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SN2003jd_lcophot.csv',
-                    delimiter=',', usecols=(3,), dtype='|S8').reshape((data.shape[0], 1))
-# mags = [deredMag(data[0:770, 1], 0.08, coef[filter] / 0.86) - DM, np.sqrt(
-#     data[0:770, 2] ** 2 + DMe ** 2 + (coef[filter] / 0.86) ** 2 * (self.ebv_host[1] ** 2 + self.ebv_gal[1] ** 2))]
-data = np.concatenate((np.reshape(data, (data.shape[0], 3)), np.reshape(filter, (data.shape[0], 1))), axis=1)
-labels=['B','V','I','R']
-colors=['r','b','k','g','orange']
-f=plt.figure(1)
-for i,lab in enumerate(labels):
-    plt.scatter(data[data[:,3]==lab,0].astype(np.float),data[data[:,3]==lab,1].astype(np.float),label=lab,color=colors[i])
+# data = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SN2003jd_lcophot.csv', delimiter=',',
+#                   usecols=(0, 1, 2))
+# data=data.reshape((data.shape[0], 3))
+# filter = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SN2003jd_lcophot.csv',
+#                     delimiter=',', usecols=(3,), dtype='|S8').reshape((data.shape[0], 1))
+# # mags = [deredMag(data[0:770, 1], 0.08, coef[filter] / 0.86) - DM, np.sqrt(
+# #     data[0:770, 2] ** 2 + DMe ** 2 + (coef[filter] / 0.86) ** 2 * (self.ebv_host[1] ** 2 + self.ebv_gal[1] ** 2))]
+# data = np.concatenate((np.reshape(data, (data.shape[0], 3)), np.reshape(filter, (data.shape[0], 1))), axis=1)
+# labels=['B','V','I','R']
+# colors=['r','b','k','g','orange']
+# f=plt.figure(1)
+# for i,lab in enumerate(labels):
+#     plt.scatter(data[data[:,3]==lab,0].astype(np.float),data[data[:,3]==lab,1].astype(np.float),label=lab,color=colors[i])
+#
+# plt.gca().invert_yaxis()
 
-plt.gca().invert_yaxis()
-plt.legend()
+tp=7.8
+Lp=42.6
+
+beta=np.arange(-2,2,0.0001)
+mni=np.zeros(beta.shape)
+for i,b in enumerate(beta):
+    print i,b
+    mni[i]=nickel_mass_khatami(tp,10**Lp,0.1,b)[0]
+
+
+
+plt.plot(beta,mni)
+#plt.legend()
 plt.show()
