@@ -35,7 +35,7 @@ matplotlib.rcParams['ytick.minor.size'] = 2
 matplotlib.rcParams['ytick.minor.width'] = 1.5
 matplotlib.rcParams.update({'font.size': 14})
 plt.rc('text', usetex=True)
-marker = itertools.cycle(( 'x','p','>','^','v','<','s', 'o','h','d','D','*','P','X','+','H'))
+marker = itertools.cycle(('p','>','^','v','<','s', 'o','h','d','D','*','P','X','H'))
 colors = itertools.cycle(("black","salmon","yellow","green","m","sienna","gray","blue",
                           "darkkhaki","peru","gold","deepskyblue","olive"))
 
@@ -115,13 +115,13 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv",
             types.append(row[index_sn_type])
             beta_req.append(float(row[index_beta_req].split(";")[0]))
             ax.errorbar(float(row[index_tail_ni_mass].split(";")[0]),float(row[index_arnett_ni_mass].split(";")[0]),
-                        xerr=float(row[index_tail_ni_mass].split(";")[1])*5,
+                        xerr=float(row[index_tail_ni_mass].split(";")[1]),
                         yerr=float(row[index_arnett_ni_mass].split(";")[1]),
                         marker=mark,color=dict[row[index_sn_type]],label=row[index_name], linewidth=0.4, elinewidth=0.5)
             ax10.errorbar(float(row[index_tail_ni_mass].split(";")[0]),float(row[index_arnett_ni_mass].split(";")[0]),
-                        xerr=float(row[index_tail_ni_mass].split(";")[1])*5,
+                        xerr=float(row[index_tail_ni_mass].split(";")[1]),
                         yerr=float(row[index_arnett_ni_mass].split(";")[1]),
-                        marker=mark,color=dict[row[index_sn_type]],label=row[index_name], linewidth=0.4, elinewidth=0.5,mec='k')
+                        marker=mark,color=dict[row[index_sn_type]],label=row[index_name], markersize=7,linewidth=0.4, elinewidth=0.5,mec='k')
             ax7.errorbar(float(row[index_tail_ni_mass].split(";")[0]), float(row[index_beta_req].split(";")[0]), yerr=float(row[index_beta_req].split(";")[1]),
                          xerr=float(row[index_tail_ni_mass].split(";")[1]),
                                                                              marker=mark,

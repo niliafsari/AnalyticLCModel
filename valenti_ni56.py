@@ -15,7 +15,7 @@ import sys
 from scipy.interpolate import UnivariateSpline
 
 def valenti_ni56(dt,Lbol,E51=0,Mej=0,Le=0):
-    M_sun=2e33
+    M_sun = 1.9884e33
     c=3e10
     tau_Ni=8.8*86400. # decay time of Ni56 in sec
     tau_Co=9.822e6 #decay time of Co56 in sec
@@ -40,8 +40,20 @@ def valenti_ni56(dt,Lbol,E51=0,Mej=0,Le=0):
         M_Ni = np.divide(Lbol,S_Ni+S_Co1+S_Co2+S_Co3)
         M_Ni_e=np.divide(Le,S_Ni+S_Co1+S_Co2+S_Co3)
     return M_Ni/M_sun, M_Ni_e/M_sun
+
+def arnett_param(dt,Mej=0):
+    M_sun = 1.9884e33
+    c=3e10
+    tau_Ni=8.8*86400. # decay time of Ni56 in sec
+    tau_Co=9.822e6 #decay time of Co56 in sec
+    e_Ni=3.90e10 # erg/s/g energy produced by 1 gram of Ni
+    e_Co=6.78e9 #erg/s/g energy produced by 1 gram of Co
+    x=np.exp(-dt*86400./tau_Ni)+ (e_Co/e_Ni)*(np.exp(-dt*86400./tau_Co) - np.exp(-dt*86400./tau_Ni))
+    return x
+
+
 def valenti_bol(dt,M_Ni,MejE):
-    M_sun=2e33
+    M_sun = 1.9884e33
     M_Ni=M_Ni*M_sun
     c=3e10
     tau_Ni=8.8*86400. # decay time of Ni56 in sec
@@ -61,12 +73,33 @@ def valenti_bol(dt,M_Ni,MejE):
         Lbol = M_Ni*(S_Ni+S_Co1+S_Co2+S_Co3)
     return Lbol
 
+def drout_bol(dt,M_Ni,MejE):
+    M_sun = 1.9884e33
+    M_Ni=M_Ni*M_sun
+    c=3e10
+    tau_Ni=8.8*86400. # decay time of Ni56 in sec
+    tau_Co=9.822e6 #decay time of Co56 in sec
+    e_Ni=3.90e10 # erg/s/g energy produced by 1 gram of Ni
+    e_Co=6.78e9 #erg/s/g energy produced by 1 gram of Co
+    if (MejE==0.0):
+        Lbol =M_Ni*(e_Ni*np.exp(-dt*86400./tau_Ni)+ e_Co*(np.exp(-dt*86400./tau_Co) - np.exp(-dt*86400./tau_Ni)))
+    else:
+        F = 32*MejE
+        G = 16.1*F
+        Epsilon =  e_Co*(np.exp(-dt*86400./tau_Co) - np.exp(-dt*86400./tau_Ni))
+        S_Ni = e_Ni * np.exp(-dt * 86400. / tau_Ni)*(1-np.exp(-(F/dt)**2.))
+        S_Co1 = 0.81*Epsilon*(1-np.exp(-(F/dt)**2.))
+        S_Co2 = 0.164*Epsilon*(1-np.exp(-(F/dt)**2.))*(1-np.exp(-(G/dt)**2.))
+        S_Co3 = 0.036*Epsilon*(1-np.exp(-(G/dt)**2.))
+        Lbol = M_Ni*(S_Ni+S_Co1+S_Co2+S_Co3)
+    return Lbol
+
 def valentiErr(p, t, L, L_err):
     err = (valenti_bol(t, p[0],p[1]) - L)/L_err
     return np.abs(err)
 
 def wheeler_ni56(dt,Lbol,E51=0,Mej=0,Le=0):
-    M_sun=2e33
+    M_sun=1.9884e33
     c=3e10
     tau_Ni=8.8*86400. # decay time of Ni56 in sec
     tau_Co=111.3*86400 #decay time of Co56 in sec
@@ -122,7 +155,7 @@ def wygoda_ni56(dt,Lbol,E51=0,Mej=0,Le=0):
     return M_Ni/M_sun, M_Ni_e/M_sun
 
 def wygoda_bol(dt,M_Ni,MejE):
-    M_sun=2e33
+    M_sun = 1.9884e33
     M_Ni=M_Ni*M_sun
     c=3e10
     tau_Ni=8.8*86400. # decay time of Ni56 in sec
@@ -131,8 +164,11 @@ def wygoda_bol(dt,M_Ni,MejE):
     e_Co=6.78e9 #erg/s/g energy produced by 1 gram of Co
     F = 32*MejE
     S=((e_Ni-e_Co)*np.exp(-dt*86400./tau_Ni) +e_Co*np.exp(-dt*86400./tau_Co))
-    S_pos = M_sun * 4.64 * (-np.exp(-dt * 86400. / tau_Ni) + np.exp(-dt * 86400. / tau_Co)) * 1e41
-    S_gamma = (1-np.exp(-(F/dt)**2.))
+    S_pos = 4.64 * (-np.exp(-dt * 86400. / tau_Ni) + np.exp(-dt * 86400. / tau_Co))*(1e41/M_sun)
+    if (MejE==0.0):
+        S_gamma = 1
+    else:
+        S_gamma = (1-np.exp(-(F/dt)**2.))
     Lbol=M_Ni*(np.multiply(S,S_gamma)+S_pos)
     return Lbol
 
@@ -142,19 +178,21 @@ def wygodaErr(p, t, L, L_err):
 
 
 
-def nickel_mass_khatami_perturb(t_peak,L_peak,L_peak_e,beta):
-    n=1000
-    L= np.multiply(np.tile(L_peak_e,n), np.random.randn(n)+np.tile(L_peak,n))
-    t_peak_t=np.tile(t_peak, n)
-    MNi=np.divide(np.multiply(L_peak*(beta**2),(t_peak_t/8.8)**2),(2*3.9e10*((0.83*np.multiply((1-beta*t_peak_t/8.8),np.exp(-beta*t_peak_t/8.8)))+(26.56*(1-(np.multiply((1+beta*t_peak_t/111.3),np.exp(-beta*t_peak_t/111.3))))))))/M_sun.to("g").value
-    return np.mean(MNi,axis=0), np.std(MNi,axis=0)
+# def nickel_mass_khatami_perturb(t_peak,L_peak,L_peak_e,beta):
+#     n=1000
+#     L= np.multiply(np.tile(L_peak_e,n), np.random.randn(n)+np.tile(L_peak,n))
+#     t_peak_t=np.tile(t_peak, n)
+#     MNi=np.divide(np.multiply(L_peak*(beta**2),(t_peak_t/8.8)**2),(2*3.9e10*((0.83*np.multiply((1-beta*t_peak_t/8.8),np.exp(-beta*t_peak_t/8.8)))+(26.56*(1-(np.multiply((1+beta*t_peak_t/111.3),np.exp(-beta*t_peak_t/111.3))))))))/M_sun.to("g").value
+#     return np.mean(MNi,axis=0), np.std(MNi,axis=0)
+
+
 
 def nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta):
+    M_sun = 1.9884e33
     e_Ni=3.90e10 # erg/s/g energy produced by 1 gram of Ni
     e_Co=6.78e9 #erg/s/g energy produced by 1 gram of Co
     tau_Ni=8.8*86400. # decay time of Ni56 in sec
     tau_Co = 111.3 * 86400  #decay time of Co56 in sec
-    M_sun = 2e33
     MNi=np.divide(L_peak*(beta**2)*(t_peak/8.8)**2,(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))
                                                             +((e_Co*tau_Co**2/(e_Ni*tau_Ni**2))*(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3))))))))/M_sun
     MNi_err=np.divide(np.multiply(L_peak_err*(beta**2),(t_peak/8.8)**2),(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))+((e_Co*tau_Co**2/(e_Ni*tau_Ni**2))*(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3))))))))/M_sun

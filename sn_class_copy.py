@@ -524,7 +524,7 @@ class supernova:
         elif (self.name=='SN2009jf'):
             ub=50
             t_u=t_u[(t_u<(ub-10))]
-        elif (self.name=='SN2003jd') |(self.name=='SN2017gax') |(self.name=='SN2009bb') | (self.name=='SN1993J')| (self.name=='SN2006T') | (self.name=='SN2013df') | (self.name=='SN2004gq'):
+        elif (self.name=='SN2003jd') | (self.name=='SN1993J')| (self.name=='SN2006T') | (self.name=='SN2013df') | (self.name=='SN2004gq'):
             ub=40
             t_u=t_u[(t_u<(ub-10))]
         else:
@@ -552,7 +552,7 @@ class supernova:
                 if (self.name=='SN2006el' )| (self.name=='SN2011bm') | (self.name=='SN2003jd'):
                     Me=Me/5
                 #print M,t
-                fit = ErrorPropagationSpline(t[(t<ub)], M[(t<ub)], Me[(t<ub)], s=s)
+                fit = ErrorPropagationSpline(t[(t<ub)], M[(t<ub)], Me[(t<ub)], s=3.5)
                 M_u[j, :], M_e[j, :],tpeak_err[j, :] = fit(t_u)
             fit_linear = ErrorPropagationLinear(t[(t > np.min(t_u_t)) & (t<np.max(t_u_t))], M[(t > np.min(t_u_t))& (t<np.max(t_u_t))], Me[(t > np.min(t_u_t))& (t<np.max(t_u_t))])
             M_u_t[j, :], M_e_t[j, :] = fit_linear(t_u_t)
@@ -611,20 +611,14 @@ class supernova:
         else:
             n=100
             s = np.random.normal(0, self.t0[1], n)
-        #from SNAP5.Analysis.LCFitting import fit_bootstrap
         p=np.zeros(shape=(2,n))
         p_err = np.zeros(shape=(2, n))
         for k,offset in enumerate(s):
-            # x, x_err = fit_bootstrap([0.2, 3], t_u_t[(t_u_t >= 60) & (t_u_t < 120)]+offset, lbol_t[(t_u_t >= 60) & (t_u_t < 120)],
-            #                          np.clip(le_t[(t_u_t >= 60) & (t_u_t < 120)], a_min=0.0001e42, a_max=1e51),wygodaErr,
-            #                          errfunc=True,bounds=([0.0,0], [0.5,6]), perturb=True, n=100, nproc=4)
-            x, x_err = fit_bootstrap([0.2, 3], t_u_t[(t_u_t >= 60) & (t_u_t < 120)]+offset, lbol_t[(t_u_t >= 60) & (t_u_t < 120)],
-                                     np.clip(le_t[(t_u_t >= 60) & (t_u_t < 120)], a_min=0.0001e42, a_max=1e51),wygodaErr,
+            x, x_err = fit_bootstrap([0.1, 3], t_u_t[(t_u_t >= 60) & (t_u_t < 120)]+offset, lbol_t[(t_u_t >= 60) & (t_u_t < 120)],
+                                     np.clip(le_t[(t_u_t >= 60) & (t_u_t < 120)], a_min=0.0001e42, a_max=1e51), wygodaErr,
                                      errfunc=True, perturb=True, n=100, nproc=4)
-
             p[:,k]=x
             p_err[:,k]=x_err
-            #print "err",x_err
         self.tail_ni_mass=[np.mean(p[0,:]), np.sqrt(np.mean(p_err[0,:])**2+np.std(p[0,:])**2)]
         self.tail_meje=[np.mean(p[1,:]), np.sqrt(np.mean(p_err[1,:])**2+np.std(p[1,:])**2)]
         self.peakt[1]=np.sqrt(self.t0[1]**2+tpeak_e**2)
@@ -681,8 +675,25 @@ class supernova:
             plt.fill_betweenx(np.arange(0,10**self.peakL[0]/1,1e41),np.repeat(self.peakt[0],np.arange(0,10**self.peakL[0]/1,1e41).shape)-np.repeat(self.peakt[1],np.arange(0,10**self.peakL[0]/1,1e41).shape), np.repeat(self.peakt[0],np.arange(0,10**self.peakL[0]/1,1e41).shape)+np.repeat(self.peakt[1],np.arange(0,10**self.peakL[0]/1,1e41).shape), alpha=0.1,  edgecolor="orange", facecolor='yellow',lw=2)
             plt.plot(np.repeat(0,np.arange(0,10**self.peakL[0]*3,1e41).shape),np.arange(0,10**self.peakL[0]*3,1e41), color="mediumturquoise", lw=2)
             plt.fill_betweenx(np.arange(0,10**self.peakL[0]*3,1e41),np.repeat(0,np.arange(0,10**self.peakL[0]*3,1e41).shape)-np.repeat(self.t0[1],np.arange(0,10**self.peakL[0]*3,1e41).shape),np.repeat(0,np.arange(0,10**self.peakL[0]*3,1e41).shape)+np.repeat(self.t0[1],np.arange(0,10**self.peakL[0]*3,1e41).shape), alpha=0.4,  edgecolor="mediumturquoise", facecolor='lightcyan',lw=2.5)
-            plt.plot (t_u_t[::5], wygoda_bol(t_u_t[::5],self.tail_ni_mass[0],self.tail_meje[0])/1,'r',ls='-.' , alpha=1,lw=2.5,label=r'$^{56}$Ni model')
-            plt.legend(loc='upper right',fontsize=14)
+            #plt.plot (np.arange(1,140,0.1), valenti_bol(np.arange(1,140,0.1),self.tail_ni_mass[0],0.5)/1,'r',ls='-.' , alpha=1,lw=4,label=r'Valenti')
+            #print wygoda_bol(np.arange(5, 140, 0.1), self.tail_ni_mass[0], self.tail_meje[0])
+            plt.plot(np.arange(1, 140, 0.1),
+                     wygoda_bol(np.arange(1, 140, 0.1), self.tail_ni_mass[0], self.tail_meje[0]) / 1, 'purple', ls='-.',
+                     alpha=1, lw=2.5, label=r'Wygoda')
+            # plt.plot(np.arange(1, 140, 0.1),
+            #          wheeler_bol(np.arange(1, 140, 0.1), self.tail_ni_mass[0],0.5) / 1, 'pink', ls='-.',
+            #          alpha=1, lw=2.5, label=r'Wheeler')
+            # plt.plot(np.arange(1, 140, 0.1),
+            #          valenti_bol(np.arange(1, 140, 0.1), self.tail_ni_mass[0], 0) / 1, 'green', ls='-.',
+            #          alpha=1, lw=2.5, label=r'Full Trap Valenti')
+            # plt.plot(np.arange(1, 140, 0.1),
+            #          drout_bol(np.arange(1, 140, 0.1), self.tail_ni_mass[0], 0.5) / 1, 'magenta', ls='-.',
+            #          alpha=1, lw=2.5, label=r'Drout')
+            plt.plot(np.arange(1, 140, 0.1),
+                     wygoda_bol(np.arange(1, 140, 0.1),1.3,0.4)/ 1, color='deepskyblue', ls='-.',
+                     alpha=1, lw=2.5, label=r'Wygoda 1.3 Ni mass')
+
+            plt.legend(loc='upper right',fontsize=14,ncol=2)
             #plt.plot(t_u_t, valenti_bol(t_u_t, self.tail_ni_mass[0], self.tail_meje[0]-1) / 1, 'b')
             #plt.plot(t_u_t, valenti_bol(t_u_t, self.tail_ni_mass[0]+0.2, self.tail_meje[0]-1) / 1, 'pink')
             plt.xlabel(r'MJD $-$ \ {}'.format(np.round(self.t0[0],2)), fontname='Sans')
@@ -692,7 +703,7 @@ class supernova:
                          xy=(0.5, 0.7),
                          xycoords='axes fraction',
                          textcoords='offset points',fontsize=16)
-            plt.annotate(r'$\rm T_0 \simeq$ '+str(np.around(32*self.tail_meje[0],decimals=1)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
+            plt.annotate(r'$\rm T_0 \simeq$ '+str(np.around(32*0.5,decimals=1)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
                          +r' days',
                          xy=(0.5, 0.6),
                          xycoords='axes fraction',
@@ -704,7 +715,7 @@ class supernova:
             #              xycoords='data',
             #              textcoords='offset points',fontsize=16)
             plt.annotate(r'L$_p$',
-                         xy=((self.peakt[0]-9)/140, 0.85),
+                         xy=((self.peakt[0]-5)/140, 0.9),
                          xycoords='axes fraction',
                          textcoords='offset points',fontsize=18)
             plt.gca().set_xlim([-5, 140])
@@ -718,7 +729,7 @@ class supernova:
                          textcoords='offset points',fontsize=18)
 
             plt.gca().set_xlim([-5, 140])
-            plt.gca().set_ylim([1e41, 10**self.peakL[0]*2])
+            plt.gca().set_ylim([1e40, 10**self.peakL[0]*2])
             plt.gca().yaxis.set_minor_locator(AutoMinorLocator(5))
             plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
             ax1.set_yscale("log")
@@ -820,9 +831,9 @@ info=np.array(my_list)
 # plt.plot(np.arange(0.05,1.5,0.05),ni)
 # plt.show()
 
-for i,sn_name in enumerate(['SN2008ax']):#info[1:,0]):
-    if  (i>28)  :
-         continue
+for i,sn_name in enumerate(['SN2007ru']):#(info[1:,0]):
+    # if  (i>28) | (i<22) :
+    #      continue
     print sn_name
     sn = supernova(sn_name)
     sn.fill(info)
@@ -837,10 +848,10 @@ for i,sn_name in enumerate(['SN2008ax']):#info[1:,0]):
     print sn.ni_khatami
     print sn.beta_req
     sn.prentice_data()
-    with open('Data/'+sn.name+'_results_wygoda.csv', 'w') as f:
-        w = csv.DictWriter(f, fieldnames=sorted(vars(sn)))
-        w.writeheader()
-        w.writerow({k: getattr(sn, k) for k in vars(sn)})
+    # with open('Data/'+sn.name+'_results_wygoda.csv', 'w') as f:
+    #     w = csv.DictWriter(f, fieldnames=sorted(vars(sn)))
+    #     w.writeheader()
+    #     w.writerow({k: getattr(sn, k) for k in vars(sn)})
 
 
 # with open('Data/out_new1.csv','w') as f:
