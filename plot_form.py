@@ -45,7 +45,7 @@ sn_type=[]
 arnett_ni=[]
 ni=[]
 line=0
-f = plt.figure(1,figsize=(6,6))
+f = plt.figure(1)
 ax=plt.subplot(111)
 f2 = plt.figure(2)
 ax2=plt.subplot(111)
@@ -57,7 +57,7 @@ ax4=plt.subplot(111)
 # ax5=plt.subplot(111)
 f6 = plt.figure(6)
 ax6=plt.subplot(111)
-f7 = plt.figure(7)
+f7 = plt.figure(7,figsize=(6,6))
 ax7=plt.subplot(111)
 f8 = plt.figure(8)
 ax8=plt.subplot(111)
@@ -84,7 +84,7 @@ green_marker=[]
 types=[]
 beta_req=[]
 dict_list={'orange':orange_marker,'blue':blue_marker, 'red':red_marker, 'green':green_marker}
-with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv", "r") as f_input:
+with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec.csv", "r") as f_input:
     csv_reader = csv.reader(f_input, delimiter=",")
     rows = list(csv_reader)
     for row in rows:
@@ -176,14 +176,14 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv",
 #plt.figure(1,figsize=(10,10))
 plt.figure(1)
 ax.legend(loc=1,bbox_to_anchor=(1.3, 1.1),
-          fancybox=True, ncol=1, fontsize =8)
+          fancybox=True, ncol=1, fontsize =12)
 plt.plot(np.arange(0, 1, 0.1),np.arange(0, 1, 0.1),'--',color='black',linewidth=1)
 ax.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax.xaxis.set_minor_locator(AutoMinorLocator(5))
 # ax.xaxis.set_tick_params(width=1.5)
 # ax.yaxis.set_tick_params(width=1.5)
-ax.set_ylabel(r'Arnett $\rm M_{Ni} \ (M_\odot$)')
-ax.set_xlabel(r'Tail $\rm M_{Ni} \ (M_\odot$)')
+ax.set_ylabel(r'Arnett $ M_{Ni} \ (M_\odot$)',fontsize=24)
+ax.set_xlabel(r'Tail $ M_{Ni} \ (M_\odot$)',fontsize=24)
 plt.xlim(0, 0.9)
 plt.ylim(0, 0.9)
 ax.xaxis.set_ticks(np.arange(0, 1, 0.1))
@@ -194,8 +194,11 @@ f.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Arnett_Tail1.pd
 
 plt.figure(10)
 #plt.figure(9,figsize=(10,10))
-ax10.legend(loc=1,bbox_to_anchor=(1.35,1.1),
-          fancybox=True, ncol=1, fontsize =8)
+# ax10.legend(loc=1,bbox_to_anchor=(1.32,1.1),
+#           fancybox=True, ncol=1, fontsize =8)
+ax10.legend(loc='center', bbox_to_anchor=(1.05,-0.05,0.3,1),
+          fancybox=True, ncol=1, fontsize =12,labelspacing=0.05,handletextpad=0.2)
+
 #legend1 = plt.legend(plot_lines[0], ["algo1", "algo2", "algo3"], loc=1)
 lines = ax10.get_lines()
 plt.annotate(r'Ic-BL',color=dict['Ic BL'],
@@ -225,8 +228,8 @@ ax10.xaxis.set_ticks_position('both')
 ax10.yaxis.set_ticks_position('both')
 ax10.tick_params(direction = 'in',which ='both')
 ax10.set_aspect('equal', adjustable='box')
-ax10.set_ylabel(r'Arnett $\rm M_{Ni} \ (M_\odot$)')
-ax10.set_xlabel(r'Tail $\rm M_{Ni} \ (M_\odot$)')
+ax10.set_ylabel(r'Arnett $ M_{\rm Ni} \ (M_\odot$)',fontsize=20)
+ax10.set_xlabel(r'Tail $ M_{\rm Ni} \ (M_\odot$)',fontsize=20)
 f10.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Arnett_Tail_loglog.pdf', bbox_inches='tight')
 
 
@@ -260,7 +263,7 @@ ax2.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax2.xaxis.set_minor_locator(AutoMinorLocator(5))
 # ax.xaxis.set_tick_params(width=1.5)
 # ax.yaxis.set_tick_params(width=1.5)
-ax2.set_ylabel(r'Prentice $\rm M_{Ni} \ (M_\odot$)')
+ax2.set_ylabel(r'Prentice $\rm M_{\rm Ni} \ (M_\odot$)')
 ax2.set_xlabel(r'Tail $\rm M_{Ni} \ (M_\odot$)')
 ax2.set_xlim(0, 0.6)
 ax2.set_ylim(0, 0.6)
@@ -346,8 +349,10 @@ f6.savefig('./Plots/Ni_Prentice_Arnett1.pdf', bbox_inches='tight')
 #          fancybox=True, ncol=3, fontsize =10)
 types=np.array(types)
 beta_req=np.array(beta_req)
-ax7.legend(loc=1,bbox_to_anchor=(1.35,1.1),
-          fancybox=True, ncol=1, fontsize =8)
+
+
+
+
 #ax6.plot(np.arange(0, 0.8, 0.1),np.arange(0, 0.8, 0.1),'--',color='black',linewidth=1)
 ax7.yaxis.set_minor_locator(AutoMinorLocator(5))
 ax7.xaxis.set_minor_locator(AutoMinorLocator(5))
@@ -378,19 +383,21 @@ Y=np.repeat(np.median(beta_req[types=='IIb']),x.shape)
 ax7.plot(x,Y,color='green',lw=1,ls='-',alpha=0.9)
 
 
-ax7.set_ylabel(r'Tuned $\beta$')
-ax7.set_xlabel(r'Tail $\rm M_{Ni} \ (M_\odot$)')
+ax7.set_ylabel(r'Tuned $\beta$',fontsize=20)
+ax7.set_xlabel(r'Tail $M_{\rm Ni} \ (M_\odot$)',fontsize=20)
 ax7.set_xscale("log")
 ax7.xaxis.set_ticks_position('both')
 ax7.yaxis.set_ticks_position('both')
 ax7.tick_params(direction = 'in',which ='both')
 ax7.set_xlim(0.01, 1)
 ax7.set_ylim(0, 1.75)
-
+ax7.legend(loc='center', bbox_to_anchor=(1.05, 0,0.3,1),
+          fancybox=True, ncol=1, fontsize =12,labelspacing=0.1,handletextpad=0.1)
+#ax7.figure.set_size_inches(5,4)
 #ax7.yaxis.set_ticks(np.arange(0, 0.7, 0.1))
 #ax7.set_aspect('equal', adjustable='box')
-plt.tight_layout()
-f7.savefig('./Plots/Ni_Tail_BetaReq1.pdf', bbox_inches='tight')
+#plt.tight_layout()
+f7.savefig('./Plots/Ni_Tail_BetaReq1.pdf',bbox_inches='tight')
 
 #ax5.set_aspect('equal', adjustable='box')
 

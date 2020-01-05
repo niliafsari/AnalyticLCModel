@@ -49,7 +49,8 @@ line=0
 f = plt.figure(1,figsize=(6,6))
 ax=plt.subplot(111)
 
-
+f3=plt.figure(3)
+ax3=plt.subplot(111)
 
 
 dict={'Ic':'red', 'Ib':'blue','Ic BL':'orange', 'IcGRB':'orange','IIb':'green','Ib pec':'blue', 'Ibn':'blue'}
@@ -64,6 +65,8 @@ red_marker=[]
 green_marker=[]
 types=[]
 beta_req=[]
+lpeaks=[]
+tpeaks=[]
 dict_list={'orange':orange_marker,'blue':blue_marker, 'red':red_marker, 'green':green_marker}
 with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv", "r") as f_input:
     csv_reader = csv.reader(f_input, delimiter=",")
@@ -86,8 +89,8 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv",
         else:
             mark = marker.next()
             col = colors.next()
-            # while mark in dict_list[dict[row[index_sn_type]]]:
-            #     mark = marker.next()
+            while mark in dict_list[dict[row[index_sn_type]]]:
+                mark = marker.next()
             sn_names.append(row[index_name])
             sn_type.append(row[index_sn_type])
             if (len(orange_marker)==0) & (dict[row[index_sn_type]]=='orange'):
@@ -104,6 +107,8 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv",
 
             arnett_ni.append(float(row[index_arnett_ni_mass].split(";")[0]))
             ni.append(float(row[index_tail_ni_mass].split(";")[0]))
+            lpeaks.append(float(row[index_lpeak].split(";")[0]))
+            tpeaks.append(float(row[index_tpeak].split(";")[0]))
             types.append(row[index_sn_type])
             beta_req.append(float(row[index_beta_req].split(";")[0]))
             ax.errorbar(float(row[index_tail_ni_mass].split(";")[0]), float(row[index_beta_req].split(";")[0]), yerr=float(row[index_beta_req].split(";")[1]),
@@ -112,6 +117,12 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv",
                                                                              color='deepskyblue',
                                                                              label=label, linewidth=0.4,
                                                                              elinewidth=0.5, mec='k',markersize=8)
+            lbol,lbol_err=lbol_khatami(float(row[index_tpeak].split(";")[0]), float(row[index_tail_ni_mass].split(";")[0]),
+                         float(row[index_tail_ni_mass].split(";")[1]), 9.0 / 8.0)
+            print "khatami", np.log10(lbol), "lpeak",float(row[index_lpeak].split(";")[0]),row[index_name]
+            lfrac=(10**float(row[index_lpeak].split(";")[0]))/ lbol
+            lfrac_err=lfrac*(np.sqrt((lbol_err/lbol)**2+(10**float(row[index_lpeak].split(";")[1])/10**float(row[index_lpeak].split(";")[0]))**2))
+            ax3.errorbar(float(row[index_beta_req].split(";")[0]), lfrac, xerr=float(row[index_beta_req].split(";")[1]), yerr=lfrac_err,markersize=8,  marker=mark, mec='k',color=dict[row[index_sn_type]], label=row[index_name], linewidth=0.4)
             if dict[row[index_sn_type]]=='orange':
                 orange_marker.append(mark)
             elif dict[row[index_sn_type]]=='blue':
@@ -151,6 +162,18 @@ ax.tick_params(direction = 'in',which ='both')
 ax.set_xlim(0.01, 1)
 ax.set_ylim(0.0001, 2)
 
+# plt.figure(3)
+# ax3=plt.subplot(111)
+# for i,nimass in enumerate(ni):
+
+ax3.set_ylabel(r'$\rm L_{ peak} / L_{khatami} $',fontsize=18)
+ax3.set_xlabel(r'Tuned $\beta$ ',fontsize=18)
+ax3.legend(loc=1,bbox_to_anchor=(1.35,1.1),
+          fancybox=True, ncol=1, fontsize =8)
+ax3.xaxis.set_ticks_position('both')
+ax3.yaxis.set_ticks_position('both')
+ax3.tick_params(direction = 'in',which ='both')
+
 from SNAP5.Analysis.LCFitting import fit_bootstrap
 mni=np.logspace(np.log10(0.02),np.log10(1),5, endpoint=False)
 tpeaks=np.logspace(np.log10(5),np.log10(80),4, endpoint=False)
@@ -184,6 +207,8 @@ ax.text(0.24, betafit[0][0]-0.085, '{}'.format('Barnes19'),fontsize=13)
     #              xycoords='axes fraction', fontsize=16)
         #print tp, ni,  lpeak[i,j],betas[i,j]
         #ax.scatter(ni,betas[i,j],marker='s',s=40,color='lightgray')
+
+
 
 mni=np.logspace(np.log10(0.01),np.log10(1),5, endpoint=True)
 tpeaks=np.linspace(5,80,5, endpoint=True)
@@ -223,6 +248,8 @@ for i,ni in enumerate(nimasses):
     ax2.scatter(tpeaks[i],lpeaks[i]/(M_sun*ni*e_Ni) , marker='^', s=120, color='yellow', edgecolor='k')
     mni=nickel_mass_khatami(tpeaks[i],lpeaks[i],10,9.0/8.0)
     ax2.scatter( tpeaks[i],lpeaks[i] / (M_sun * mni[0] * e_Ni), marker='.', s=5, color='yellow', edgecolor='k')
+
+
 
     #print arnett_param(tpeaks[i])
 ax.legend(loc=3,fontsize=12,ncol=1,fancybox=True)

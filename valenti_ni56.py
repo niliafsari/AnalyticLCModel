@@ -198,6 +198,22 @@ def nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta):
     MNi_err=np.divide(np.multiply(L_peak_err*(beta**2),(t_peak/8.8)**2),(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))+((e_Co*tau_Co**2/(e_Ni*tau_Ni**2))*(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3))))))))/M_sun
     return MNi,MNi_err
 
+def lbol_khatami(t_peak,Mni,Mni_err,beta):
+    M_sun = 1.9884e33
+    e_Ni=3.90e10 # erg/s/g energy produced by 1 gram of Ni
+    e_Co=6.78e9 #erg/s/g energy produced by 1 gram of Co
+    tau_Ni=8.8*86400. # decay time of Ni56 in sec
+    tau_Co = 111.3 * 86400  #decay time of Co56 in sec
+    L_peak=Mni*M_sun*(2*e_Ni*(((1-(e_Co/e_Ni))*(1-np.multiply((1+beta*t_peak/8.8),np.exp(-beta*t_peak/8.8))))
+                                                            +((e_Co*tau_Co**2/(e_Ni*tau_Ni**2))
+                                                              *(1-(np.multiply((1+beta*t_peak/111.3),np.exp(-beta*t_peak/111.3)))))))/((beta**2)*(t_peak/8.8)**2)
+    L_peak_err = Mni_err*M_sun * (2 * e_Ni * (
+                ((1 - (e_Co / e_Ni)) * (1 - np.multiply((1 + beta * t_peak / 8.8), np.exp(-beta * t_peak / 8.8))))
+                + ((e_Co * tau_Co ** 2 / (e_Ni * tau_Ni ** 2))
+                   * (1 - (np.multiply((1 + beta * t_peak / 111.3), np.exp(-beta * t_peak / 111.3))))))) / (
+                         (beta ** 2) * (t_peak / 8.8) ** 2)
+    return L_peak,L_peak_err
+
 def nickel_mass_khatami_err(beta,t_peak,L_peak,L_peak_err,Mni,Mni_err):
     err = (nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta)[0] - Mni)/ np.sqrt(Mni_err**2+nickel_mass_khatami(t_peak,L_peak,L_peak_err,beta)[1]**2)
     return np.abs(err)

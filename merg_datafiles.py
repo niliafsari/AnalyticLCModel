@@ -28,7 +28,7 @@ b= sorted(b)
 b.remove('Data/iPTF13bvn_results_wygoda.csv')
 b.insert(21,'Data/iPTF13bvn_results_wygoda.csv')
 
-with open('Data/SNdata_wygoda.csv','w') as f:
+with open('Data/SNdata_wygoda_26dec.csv','w') as f:
     for file in b:
         #print file
         with open(file, mode='r') as csv_file:
@@ -73,7 +73,7 @@ ni_e=[]
 arnett_ni_e=[]
 bc=[]
 line=0
-with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv", "r") as f_input:
+with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec.csv", "r") as f_input:
     csv_reader = csv.reader(f_input, delimiter=",")
     rows = list(csv_reader)
     for row in rows:
@@ -158,5 +158,5 @@ res['T0_e']=np.round(np.array(T0_e),1)
 res['beta']=np.round(np.array(beta_req),2)
 res['beta_e']=np.round(np.array(beta_req_e),2)
 
-np.savetxt("Data/table1.csv", ab, fmt="%10s & %12s & %6s & %10.1f (%10.1f) & %10.4f (%10.4f) & %10.2f (%10.2f) & %10.1f (%10.1f)", newline=' \\\\\n')
-np.savetxt("Data/table2.csv", res, fmt="%10s & %6s & %10.2f (%10.2f) & %10.1f (%10.1f) & %10.3f (%10.3f) & %10.1f (%10.1f) & %10.2f (%10.2f) & %10.2f (%10.2f)", newline=' \\\\\n')
+np.savetxt("Data/table1_26dec.csv", ab, fmt="%10s & %12s & %6s & %10.1f (%10.1f) & %10.4f (%10.4f) & %10.2f (%10.2f) & %10.1f (%10.1f)", newline=' \\\\\n')
+np.savetxt("Data/table2_26dec.csv", res, fmt="%10s & $%6s$ & %10.2f (%10.2f) & %10.1f (%10.1f) & %10.3f (%10.3f) & %10.1f (%10.1f) & %10.2f (%10.2f) & %10.2f (%10.2f)", newline=' \\\\\n')

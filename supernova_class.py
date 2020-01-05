@@ -423,7 +423,7 @@ class supernova:
                         if np.any(np.in1d(dat["source"].split(','), self.source_bc)):
                             add = np.concatenate(([float(dat["time"]), dat["magnitude"], error],
                                                   [deredMag(float(dat["magnitude"]), self.ebv_host[0]+self.ebv_gal[0], coef[dat["band"]]/0.86) - DM,
-                                                   np.sqrt(error ** 2 + DMe ** 2+(coef[dat["band"]]/0.86)**2*(self.ebv_host[1]**2+self.ebv_gal[1]**2)), dat["band"]]))
+                                                   np.sqrt(error ** 2), dat["band"]]))
                             add = np.reshape(add, (1, 6))
                             mag = np.concatenate((mag, add), axis=0)
         else:
@@ -524,7 +524,7 @@ class supernova:
         elif (self.name=='SN2009jf'):
             ub=50
             t_u=t_u[(t_u<(ub-10))]
-        elif (self.name=='SN2003jd') |(self.name=='SN2017gax') |(self.name=='SN2009bb') | (self.name=='SN1993J')| (self.name=='SN2006T') | (self.name=='SN2013df') | (self.name=='SN2004gq'):
+        elif (self.name=='SN2008ax') |(self.name=='SN2003jd') |(self.name=='SN2017gax') |(self.name=='SN2009bb') | (self.name=='SN1993J')| (self.name=='SN2006T') | (self.name=='SN2013df') | (self.name=='SN2004gq'):
             ub=40
             t_u=t_u[(t_u<(ub-10))]
         else:
@@ -532,8 +532,11 @@ class supernova:
             t_u=t_u[(t_u<(ub-10))]
         M_u = np.zeros(shape=(len(self.band_bc), np.shape(t_u)[0]))
         M_e = np.zeros(shape=(len(self.band_bc), np.shape(t_u)[0]))
+        sys_e = np.zeros(shape=(len(self.band_bc),))
         tpeak_err = np.zeros(shape=(len(self.band_bc), np.shape(t_u)[0]))
         for j, band in enumerate(self.band_bc):
+            sys_e[j] = np.sqrt(
+                DMe ** 2 )
             t = mag[:, 0][mag[:, 5] == band].astype(float)
             M = mag[:, 3][mag[:, 5] == band].astype(float)
             Me = mag[:, 4][mag[:, 5] == band].astype(float)
@@ -559,8 +562,9 @@ class supernova:
         if (self.name=='SN2008D') | (self.name=='SN2006el'):
             M_u[1, :] = M_u[2, :] - 1.2444 * (M_u[2, :] - M_u[1, :]) - 0.3820 #i->I
             self.band_bc[1]='I'
-        lbol,le=lyman_BC(np.reshape(M_u[0, :],(1,np.shape(M_u[0, :])[0])), np.reshape(M_u[1, :],(1,np.shape(M_u[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(M_e[0, :],(1,np.shape(M_e[0, :])[0])), np.reshape(M_e[1, :],(1,np.shape(M_e[1, :])[0])))
-        lbol_t,le_t=lyman_BC(np.reshape(M_u_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_u_t[1, :],(1,np.shape(M_u_t[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(M_e_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_e_t[1, :],(1,np.shape(M_u_t[1, :])[0])))
+        lbol,le=lyman_BC(np.reshape(M_u[0, :],(1,np.shape(M_u[0, :])[0])), np.reshape(M_u[1, :],(1,np.shape(M_u[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(np.sqrt(M_e[0, :]**2+sys_e[0]**2),(1,np.shape(M_e[0, :])[0])), np.reshape(np.sqrt(M_e[1, :]**2+sys_e[1]**2),(1,np.shape(M_e[1, :])[0])))
+        #print np.median(np.sqrt(M_e[0, :]**2+sys_e[0]**2)), np.median(np.sqrt(M_e_t[1, :]**2+sys_e[1]**2)), np.min(M_e[0,:]),np.max(M_e[0,:])
+        lbol_t,le_t=lyman_BC(np.reshape(M_u_t[0, :],(1,np.shape(M_u_t[0, :])[0])), np.reshape(M_u_t[1, :],(1,np.shape(M_u_t[1, :])[0])),self.band_bc[0],self.band_bc[1],np.reshape(np.sqrt(M_e_t[0, :]**2+sys_e[0]**2),(1,np.shape(M_u_t[0, :])[0])), np.reshape(np.sqrt(M_e_t[1, :]**2+sys_e[1]**2),(1,np.shape(M_u_t[1, :])[0])))
         lbol = np.reshape(lbol, t_u.shape)
         lbol_t = np.reshape(lbol_t, t_u_t.shape)
         le = np.reshape(le, t_u.shape)
@@ -625,15 +629,15 @@ class supernova:
             p[:,k]=x
             p_err[:,k]=x_err
             #print "err",x_err
-        self.tail_ni_mass=[np.mean(p[0,:]), np.sqrt(np.mean(p_err[0,:])**2+np.std(p[0,:])**2)]
-        self.tail_meje=[np.mean(p[1,:]), np.sqrt(np.mean(p_err[1,:])**2+np.std(p[1,:])**2)]
+        self.tail_ni_mass=[np.median(p[0,:]), np.sqrt(np.median(p_err[0,:])**2+np.std(p[0,:])**2)]
+        self.tail_meje=[np.median(p[1,:]), np.sqrt(np.median(p_err[1,:])**2+np.std(p[1,:])**2)]
         self.peakt[1]=np.sqrt(self.t0[1]**2+tpeak_e**2)
-        n=10
+        n=100
         s = np.random.normal(0, self.peakt[1], n)
         p=np.zeros(n)
         p_err = np.zeros(n)
         for k,offset in enumerate(s):
-            p[ k], p_err[ k]=wygoda_ni56((self.peakt[0]+offset),10**self.peakL[0],0,0,10**self.peakL[1])
+            p[ k], p_err[ k]=wygoda_ni56((self.peakt[0]+offset),10**self.peakL[0],0,0,10**(self.peakL[1]))
         self.arnett_ni_mass=[np.mean(p), np.sqrt(np.mean(p_err)**2+np.std(p)**2)]
         if 1:
             import matplotlib.gridspec as gridspec
@@ -644,18 +648,18 @@ class supernova:
             plt.errorbar(mag[:, 0][mag[:, 5] == self.band_bc[0]].astype(float) - self.t0[0],
                          mag[:, 3][mag[:, 5] == self.band_bc[0]].astype(float),
                          yerr=mag[:, 4][mag[:, 5] == self.band_bc[0]].astype(float), fmt='o', lw=1,
-                         label=self.band_bc[0], color='limegreen', ls='none', markersize=7, mec='k',mew=0.8)
+                         label='$'+self.band_bc[0]+'$', color='limegreen', ls='none', markersize=7, mec='k',mew=0.8)
             plt.errorbar(mag[:, 0][mag[:, 5] == self.band_bc[1]].astype(float) - self.t0[0],
                          mag[:, 3][mag[:, 5] == self.band_bc[1]].astype(float),
                          yerr=mag[:, 4][mag[:, 5] == self.band_bc[1]].astype(float), fmt='o', lw=1,
-                         label=self.band_bc[1], color='r', ls='none', markersize=7, mec='k',mew=0.8)
-            plt.plot(t_u, M_u[0, :], lw=2, color='darkgreen', label=self.band_bc[0]+' fit')
+                         label='$'+self.band_bc[1]+'$', color='r', ls='none', markersize=7, mec='k',mew=0.8)
+            plt.plot(t_u, M_u[0, :], lw=2, color='darkgreen', label='$'+self.band_bc[0]+'$ fit')
             # plt.fill_between(t_u,M_u[0, :]-M_e[0, :],M_u[0, :]+M_e[0, :],alpha=0.3,facecolor='r',edgecolor='tomato')
-            plt.plot(t_u, M_u[1, :], lw=2, color='maroon', label=self.band_bc[1]+' fit')
+            plt.plot(t_u, M_u[1, :], lw=2, color='maroon', label='$'+self.band_bc[1]+'$ fit')
             plt.plot(t_u_t, M_u_t[0, :], lw=2,color='darkgreen')
             plt.plot(t_u_t, M_u_t[1, :], lw=2,color='maroon')
             #plt.xlabel(r'MJD $-$ \ {}'.format(np.round(self.t0[0],2)), fontname='Sans')
-            plt.ylabel(r'$\rm M_{\rm abs} \ (\rm mag)$')
+            plt.ylabel(r'$\rm M_{\rm abs} \ (\rm mag)$',fontsize=25)
             plt.gca().yaxis.set_minor_locator(AutoMinorLocator(5))
             plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
             plt.gca().set_xlim([-5, 140])
@@ -685,14 +689,30 @@ class supernova:
             plt.legend(loc='upper right',fontsize=14)
             #plt.plot(t_u_t, valenti_bol(t_u_t, self.tail_ni_mass[0], self.tail_meje[0]-1) / 1, 'b')
             #plt.plot(t_u_t, valenti_bol(t_u_t, self.tail_ni_mass[0]+0.2, self.tail_meje[0]-1) / 1, 'pink')
-            plt.xlabel(r'MJD $-$ \ {}'.format(np.round(self.t0[0],2)), fontname='Sans')
-            plt.ylabel(r'$\rm L_{\rm bol} \ (\rm \ erg \ s^{-1})$')
-            plt.annotate(r'M$_{\rm Ni} \simeq$ '+str(np.around(self.tail_ni_mass[0],decimals=3)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
-                         + r'\ $\rm M_\odot$',
+            if self.name== 'SN2013ge':
+                data_ge = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/' + self.name + '_PseudoBol.dat',
+                                     delimiter=',')
+                plt.errorbar(data_ge[:, 1]+self.peakt[0], data_ge[:, 3], yerr=data_ge[:, 6], label=self.name + ' drout16')
+            elif self.name == 'iPTF13bvn':
+                data_ge = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/' + self.name + '_PseudoBol.dat',
+                                     delimiter=',')
+                plt.scatter(data_ge[:, 0], 10**data_ge[:, 1], s=10, label=self.name + ' drout16')
+                lbol = 10 ** data_ge[:, 1]
+                t_u = data_ge[:, 0]
+            elif self.name == 'SN2009jf':
+                data_ge = np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/' + self.name + '_PseudoBol.dat',
+                                     delimiter=',')
+                plt.scatter(data_ge[:, 0], 10**((43 - data_ge[:, 1]) + 41), s=10, label=self.name + ' drout16')
+                # lbol = 10 ** ((43 - data_ge[:, 1]) + 41)
+                # t_u = data_ge[:, 0]
+            plt.xlabel(r'MJD $-$ \ {}'.format(np.round(self.t0[0],2)), fontname='Sans',fontsize=25)
+            plt.ylabel(r'$ L_{\rm bol} \ (\rm \ erg \ s^{-1})$',fontsize=25)
+            plt.annotate(r'$M_{\rm Ni} \simeq$ '+str(np.around(self.tail_ni_mass[0],decimals=3)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
+                         + r'\ $ M_\odot$',
                          xy=(0.5, 0.7),
                          xycoords='axes fraction',
                          textcoords='offset points',fontsize=16)
-            plt.annotate(r'$\rm T_0 \simeq$ '+str(np.around(32*self.tail_meje[0],decimals=1)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
+            plt.annotate(r'$ T_0 \simeq$ '+str(np.around(32*self.tail_meje[0],decimals=1)) #+'$\pm$'+ str(np.around(self.tail_ni_mass[1],decimals=3))
                          +r' days',
                          xy=(0.5, 0.6),
                          xycoords='axes fraction',
@@ -703,16 +723,16 @@ class supernova:
             #              xy=(30, (10**self.peakL[0]/1)/2),
             #              xycoords='data',
             #              textcoords='offset points',fontsize=16)
-            plt.annotate(r'L$_p$',
-                         xy=((self.peakt[0]-9)/140, 0.85),
+            plt.annotate(r'$L_p$',
+                         xy=((self.peakt[0]-9)/140, 0.87),
                          xycoords='axes fraction',
                          textcoords='offset points',fontsize=18)
             plt.gca().set_xlim([-5, 140])
-            plt.annotate(r't$_p$',
+            plt.annotate(r'$t_p$',
                          xy=((self.peakt[0]+6)/140,0.4),
                          xycoords='axes fraction',
                          textcoords='offset points',fontsize=18)
-            plt.annotate(r't$_0$',
+            plt.annotate(r'$t_0$',
                          xy=(6.0/140, 0.4),
                          xycoords='axes fraction',
                          textcoords='offset points',fontsize=18)
@@ -727,15 +747,19 @@ class supernova:
             ax1.tick_params(direction='in', which='both')
             plt.subplots_adjust(wspace=0.0, hspace=0.0)
             #plt.tight_layout()
-            plt.savefig('./Plots/'+self.name+'_lbolphot.pdf')
+            plt.savefig('./Plots/'+self.name+'_lbolphot.pdf', bbox_inches='tight')
             plt.show()
     def khatami_model(self):
         from SNAP5.Analysis.LCFitting import fit_bootstrap
         beta0 = 0.8
-        betafit = fit_bootstrap([beta0], [self.peakt[0], self.tail_ni_mass[0]],[10**self.peakL[0]],[10**self.peakL[1]], khatami_err,bounds=([0.0], [np.inf]),
-                                 errfunc=True, perturb=True, n=1000, nproc=4)
-        print betafit
-        self.beta_req= [betafit[0][0],betafit[1][0]]
+        betafit0 = fit_bootstrap([beta0], [self.peakt[0], self.tail_ni_mass[0]],[10**self.peakL[0]],[10], khatami_err,bounds=([0.0], [np.inf]),
+                                 errfunc=True, perturb=False, n=1000, nproc=4)
+        betafit1 = fit_bootstrap([beta0], [self.peakt[0], self.tail_ni_mass[0]],[10**self.peakL[0]+10**self.peakL[1]],[10], khatami_err,bounds=([0.0], [np.inf]),
+                                 errfunc=True, perturb=False, n=1000, nproc=4)
+        betafit2 = fit_bootstrap([beta0], [self.peakt[0], self.tail_ni_mass[0]],[10**self.peakL[0]-10**self.peakL[1]],[10], khatami_err,bounds=([0.0], [np.inf]),
+                                 errfunc=True, perturb=False, n=1000, nproc=4)
+        self.beta_req=[(betafit0[0][0]+betafit1[0][0]+betafit2[0][0])/3,np.abs((betafit2[0][0]-betafit1[0][0])/2)]
+        #self.beta_req= [betafit[0][0],betafit[1][0]]
     def khatami_model_litbeta(self):
         self.ni_khatami=nickel_mass_khatami(sn.peakt[0], 10 ** sn.peakL[0], 10 ** sn.peakL[1], sug_beta[self.sn_type])
     def prentice_data(self):
@@ -820,7 +844,7 @@ info=np.array(my_list)
 # plt.plot(np.arange(0.05,1.5,0.05),ni)
 # plt.show()
 
-for i,sn_name in enumerate(['SN2008ax']):#info[1:,0]):
+for i,sn_name in enumerate(['SN2011bm']):#info[1:,0]):#
     if  (i>28)  :
          continue
     print sn_name
@@ -837,10 +861,10 @@ for i,sn_name in enumerate(['SN2008ax']):#info[1:,0]):
     print sn.ni_khatami
     print sn.beta_req
     sn.prentice_data()
-    with open('Data/'+sn.name+'_results_wygoda.csv', 'w') as f:
-        w = csv.DictWriter(f, fieldnames=sorted(vars(sn)))
-        w.writeheader()
-        w.writerow({k: getattr(sn, k) for k in vars(sn)})
+    # with open('Data/'+sn.name+'_results_wygoda.csv', 'w') as f:
+    #     w = csv.DictWriter(f, fieldnames=sorted(vars(sn)))
+    #     w.writeheader()
+    #     w.writerow({k: getattr(sn, k) for k in vars(sn)})
 
 
 # with open('Data/out_new1.csv','w') as f:

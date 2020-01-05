@@ -54,7 +54,7 @@ line=0
 
 dict={'Ic':'red', 'Ib':'blue','Ic BL':'orange', 'IcGRB':'orange','IIb':'green','Ib pec':'blue', 'Ibn':'blue'}
 # Load all rows from the file into a variable called rows
-with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv", "r") as f_input:
+with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec.csv", "r") as f_input:
     csv_reader = csv.reader(f_input, delimiter=",")
     rows = list(csv_reader)
     for row in rows:
@@ -112,6 +112,7 @@ ax0.plot(X,y,color='#1f77b4',lw=3,label='Tail')
 
 y=np.arange(0,1.1,0.01)
 X=np.repeat(np.mean(arnett_ni),y.shape)
+print "arnett", "ni", np.mean(arnett_ni), np.mean(ni), np.std(arnett_ni), np.std(ni)
 ax0.plot(X,y,color='#1f77b4',lw=1.5,ls='--')
 
 y=np.arange(0,1.1,0.01)
@@ -128,7 +129,7 @@ ax0.xaxis.set_tick_params(width=1.5)
 ax0.yaxis.set_tick_params(width=1.5)
 ax0.yaxis.set_ticks_position('both')
 ax0.tick_params(direction = 'in',which ='both')
-ax0.set_ylabel(r'Overall CDF',fontsize=20)
+ax0.set_ylabel(r'Overall CDF',fontsize=18)
 
 ax1 = plt.subplot(gs1[1])
 h, edges = np.histogram(ni[types1=='Ic BL'], density=True, bins=12)
@@ -184,11 +185,12 @@ y=np.arange(0,1.2,0.01)
 X=np.repeat(np.mean(ni[types1=='Ib']),y.shape)
 ax1.plot(X,y,color='blue',lw=1.5,ls=':',alpha=0.9)
 
+print "tail:", np.mean(ni[types1=='Ic BL']), np.mean(ni[types1=='IIb']), np.mean(ni[types1=='Ic']), np.mean(ni[types1=='Ib'])
 
 ax1.set_xticklabels([])
 ax1.set_xlim([0, 0.7])
 ax1.set_ylim([0.01, 1])
-ax1.set_ylabel(r'Tail CDF',fontsize=20)
+ax1.set_ylabel(r'Tail CDF',fontsize=18)
 ax1.xaxis.set_minor_locator(AutoMinorLocator(2))
 ax1.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax1.xaxis.set_tick_params(width=1.5)
@@ -251,11 +253,16 @@ ax2.plot(X,y,color='red',lw=1.5,ls=':',alpha=0.9)
 y=np.arange(0,1.2,0.01)
 X=np.repeat(np.mean(arnett_ni[types1=='Ib']),y.shape)
 ax2.plot(X,y,color='blue',lw=1.5,ls=':',alpha=0.9)
+print ("IIb & %10.2f & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f " )%(np.round(np.mean(ni[types1=='IIb']),2), np.round(np.median(ni[types1=='IIb']),2), np.std(ni[types1=='IIb']),np.mean(arnett_ni[types1=='IIb']), np.median(arnett_ni[types1=='IIb']), np.std(arnett_ni[types1=='IIb']))
+print ("Ib & %10.2f & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f " )%(np.round(np.mean(ni[types1=='Ib']),2), np.round(np.median(ni[types1=='Ib']),2), np.std(ni[types1=='Ib']),np.mean(arnett_ni[types1=='Ib']), np.median(arnett_ni[types1=='Ib']), np.std(arnett_ni[types1=='Ib']))
+print ("Ic & %10.2f & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f " )%(np.round(np.mean(ni[types1=='Ic']),2), np.round(np.median(ni[types1=='Ic']),2), np.std(ni[types1=='Ic']),np.mean(arnett_ni[types1=='Ic']), np.median(arnett_ni[types1=='Ic']), np.std(arnett_ni[types1=='Ic']))
+print ("Ic-BL & %10.2f & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f " )%(np.round(np.mean(ni[types1=='Ic BL']),2), np.round(np.median(ni[types1=='Ic BL']),2), np.std(ni[types1=='Ic BL']),np.mean(arnett_ni[types1=='Ic BL']), np.median(arnett_ni[types1=='Ic BL']), np.std(arnett_ni[types1=='Ic BL']))
+print ("all & %10.2f & %5.2f & %5.2f & %5.2f & %5.2f & %5.2f " )%(np.round(np.mean(ni),2), np.round(np.median(ni),2), np.std(ni),np.mean(arnett_ni), np.median(arnett_ni), np.std(arnett_ni))
 
 ax2.set_xlim([0.001, 0.7])
 ax2.set_ylim([0, 1])
-ax2.set_xlabel(r'$^{56}$Ni mass (M$_\odot$)',fontsize=20)
-ax2.set_ylabel(r'Arnett CDF',fontsize=20)
+ax2.set_xlabel(r'$M_{\rm Ni} (M_\odot$)',fontsize=18)
+ax2.set_ylabel(r'Arnett CDF',fontsize=18)
 ax2.xaxis.set_minor_locator(AutoMinorLocator(2))
 ax2.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax2.xaxis.set_tick_params(width=1.5)

@@ -9,6 +9,8 @@ import os.path
 
 def lyman_BC(mag_x, mag_y, x,y, mag_x_e=None, mag_y_e=None):
     n=10000
+    # print np.max(mag_x_e),np.min(mag_x_e)
+    # print np.max(mag_y_e), np.min(mag_y_e)
     if (mag_x_e == None) & (mag_y_e == None):
         mag_x_sam = mag_x
         mag_y_sam = mag_y
@@ -32,11 +34,13 @@ def lyman_BC(mag_x, mag_y, x,y, mag_x_e=None, mag_y_e=None):
         BC_e = np.std(rms_sam+0.197  -  0.183   * (mag_x_sam -mag_y_sam) -0.419* (mag_x_sam -mag_y_sam) ** 2, axis=0)
     else:
         raise ('error, not a valid band')
+    #print BC_e
     Mbol = BC+ mag_x
     if (mag_x_e != None) & (mag_y_e != None):
         Mbol_e=np.sqrt(BC_e**2+mag_x_e**2)
     else:
         Mbol_e = np.sqrt(BC_e ** 2)
+    #print Mbol_e
     Msun = 4.74
     Lsun = 3.84e33
     lbol = Lsun * np.power(10, ((Msun - Mbol) / 2.5))
