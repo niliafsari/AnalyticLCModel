@@ -382,6 +382,11 @@ x=np.arange(0,2,0.01)
 Y=np.repeat(np.median(beta_req[types=='IIb']),x.shape)
 ax7.plot(x,Y,color='green',lw=1,ls='-',alpha=0.9)
 
+print np.median(beta_req[types=='IIb']),np.median(beta_req[types=='Ib']),np.median(beta_req[types=='Ic']),np.median(beta_req[types=='Ic BL'])
+print np.mean(beta_req[types=='IIb']),np.mean(beta_req[types=='Ib']),np.mean(beta_req[types=='Ic']),np.mean(beta_req[types=='Ic BL'])
+
+print np.std(beta_req[types=='IIb']),np.std(beta_req[types=='Ib']),np.std(beta_req[types=='Ic']),np.std(beta_req[types=='Ic BL'])
+print np.mean(beta_req),np.median(beta_req),np.std(beta_req)
 
 ax7.set_ylabel(r'Tuned $\beta$',fontsize=20)
 ax7.set_xlabel(r'Tail $M_{\rm Ni} \ (M_\odot$)',fontsize=20)

@@ -68,7 +68,7 @@ beta_req=[]
 lpeaks=[]
 tpeaks=[]
 dict_list={'orange':orange_marker,'blue':blue_marker, 'red':red_marker, 'green':green_marker}
-with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv", "r") as f_input:
+with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec.csv", "r") as f_input:
     csv_reader = csv.reader(f_input, delimiter=",")
     rows = list(csv_reader)
     for row in rows:
@@ -94,7 +94,7 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda.csv",
             sn_names.append(row[index_name])
             sn_type.append(row[index_sn_type])
             if (len(orange_marker)==0) & (dict[row[index_sn_type]]=='orange'):
-                label = 'Ic BL'
+                label = 'Ic-BL'
             elif (len(green_marker)==0) & (dict[row[index_sn_type]]=='green'):
                 label = 'IIb'
             elif (len(red_marker) == 0) & (dict[row[index_sn_type]] == 'red'):
@@ -154,7 +154,7 @@ ax.xaxis.set_minor_locator(AutoMinorLocator(5))
 #              xycoords='axes fraction', fontsize=16)
 
 ax.set_ylabel(r'$\beta$',fontsize=18)
-ax.set_xlabel(r'$\rm M_{Ni} \ (M_\odot$)',fontsize=18)
+ax.set_xlabel(r'$ M_{\rm Ni} \ (M_\odot$)',fontsize=18)
 ax.set_xscale("log")
 ax.xaxis.set_ticks_position('both')
 ax.yaxis.set_ticks_position('both')
@@ -166,7 +166,7 @@ ax.set_ylim(0.0001, 2)
 # ax3=plt.subplot(111)
 # for i,nimass in enumerate(ni):
 
-ax3.set_ylabel(r'$\rm L_{ peak} / L_{khatami} $',fontsize=18)
+ax3.set_ylabel(r'$ L_{\rm p} / L_{\rm khatami} $',fontsize=18)
 ax3.set_xlabel(r'Tuned $\beta$ ',fontsize=18)
 ax3.legend(loc=1,bbox_to_anchor=(1.35,1.1),
           fancybox=True, ncol=1, fontsize =8)
@@ -195,13 +195,13 @@ for i, ni in enumerate(mni):
     ax.plot(np.repeat(ni,betas[i,:].shape),betas[i,:],marker='x',ls='-',color='k',lw=0.5)
     ax.text(ni, 1.47, '{}'.format(np.round(ni,2)),fontsize=10)
 ax.plot(mni,betas,marker='x',ls='-',color='k',lw=0.5)
-ax.text(0.1, 1.4, '{}'.format(r'M$_{\rm Ni}$'),fontsize=13)
-ax.text(0.67, 1.75, '{}'.format(r't$_{\rm peak}$'),fontsize=13)
+ax.text(0.1, 1.4, '{}'.format(r'$M_{\rm Ni}$'),fontsize=13)
+ax.text(0.67, 1.75, '{}'.format(r'$t_{\rm p}$'),fontsize=13)
 betafit = fit_bootstrap([beta0], [17.5, 0.24], [6e42], [10 ** 0.1], khatami_err, bounds=([0.0], [np.inf]),
                         errfunc=True, perturb=False, n=50, nproc=8)
 print betafit[0][0]
-ax.scatter(0.24,betafit[0][0], marker='*',s=140,color='salmon',edgecolor='k')
-ax.text(0.24, betafit[0][0]-0.085, '{}'.format('Barnes19'),fontsize=13)
+ax.scatter(0.24,betafit[0][0], marker='*',s=140,color='salmon',edgecolor='k', label='Barnes19')
+#ax.text(0.24, betafit[0][0]-0.085, '{}'.format('Barnes19'),fontsize=13)
     # ax.annotate(r'Ic-BL', color='k',
     #              xy=(0.1, 0.9),
     #              xycoords='axes fraction', fontsize=16)
@@ -249,10 +249,42 @@ for i,ni in enumerate(nimasses):
     mni=nickel_mass_khatami(tpeaks[i],lpeaks[i],10,9.0/8.0)
     ax2.scatter( tpeaks[i],lpeaks[i] / (M_sun * mni[0] * e_Ni), marker='.', s=5, color='yellow', edgecolor='k')
 
+# folders=['N20','W18','Z9.6']
+# for f in folders:
+nickels=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/light_curves/nickel_mass.txt', delimiter=',')
+b=glob.glob("Data/light_curves/*/*.lcdat")
+i=0
+for lc in b:
+    mass=float(lc.split('/')[3].replace('s','').replace('.lcdat',''))
+    setting = lc.split('/')[2]
+    if mass>35.0:
+        if i == 0:
+            label = 'Sukhbold16'
+        else:
+            label = None
+        print mass
+        print setting
+        LC=np.loadtxt(lc, delimiter='      ', usecols=(1,2))
+        LC_p=np.max(LC[:,1])
+        t_p=np.max(LC[np.argmax(LC[:,1]),0])
+        print LC_p,t_p
+        if setting =='W18':
+            col=2
+        else:
+            col=1
+        index=np.argwhere(nickels[:,0]==mass)
+        a=list(index[0])
+        #print a
+        nickelmass=nickels[index[0,0],col]
+        print nickelmass
+        betafit = fit_bootstrap([beta0], [t_p, nickelmass], [10**LC_p], [1], khatami_err, bounds=([0.0], [np.inf]),
+                                errfunc=True, perturb=False, n=300, nproc=8)
+        print betafit
+        ax.scatter(nickelmass, betafit[0][0], marker='p', s=100, color='springgreen', edgecolor='k', label=label)
+        i=i+1
 
 
-    #print arnett_param(tpeaks[i])
-ax.legend(loc=3,fontsize=12,ncol=1,fancybox=True)
+ax.legend(loc=3,fontsize=12,ncol=1,fancybox=True, frameon=False)
 ax.set_ylim([0.005, 2])
 for tpeak in range(10,50,1):
     ax2.set_xlim([10,50])
