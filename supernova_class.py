@@ -596,6 +596,8 @@ class supernova:
             plt.fill_between(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)]-le_t[(t_u_t >= 60) & (t_u_t < 120)],
             lbol_t[(t_u_t >= 60) & (t_u_t < 120)] + le_t[(t_u_t >= 60) & (t_u_t < 120)],alpha=0.5, edgecolor='#CC4F1B', facecolor='#FF9848')
             plt.plot(t_u,lbol, color="orange")
+            np.save("Data/"+self.name +"_tail_LC.npy",np.column_stack((t_u_t.T,lbol_t.T)))
+            np.save("Data/" + self.name + "_peak_LC.npy", np.column_stack((t_u.T, lbol.T)))
             plt.fill_between(t_u,lbol - le, lbol + le, alpha=0.5,  edgecolor='#CC4F1B', facecolor='#FF9848')
             plt.xlabel(r'Time (days)',fontname='Sans')
             plt.ylabel(r'$\rm L_{\rm bol}(\rm erg \ s^{-1})$')
@@ -674,6 +676,7 @@ class supernova:
             ax.tick_params(direction='in', which='both')
             ax1=plt.subplot(gs1[1])
             plt.plot(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)]/1, color="k", lw=2)
+            #np.save()
             plt.fill_between(t_u_t[(t_u_t >= 60) & (t_u_t < 120)],lbol_t[(t_u_t >= 60) & (t_u_t < 120)]/1-le_t[(t_u_t >= 60) & (t_u_t < 120)]/1,
             lbol_t[(t_u_t >= 60) & (t_u_t < 120)] /1+ le_t[(t_u_t >= 60) & (t_u_t < 120)]/1,alpha=1, edgecolor="k", facecolor='whitesmoke',lw=1)
             plt.plot(t_u,lbol/1, color="k", lw=1)
@@ -844,7 +847,7 @@ info=np.array(my_list)
 # plt.plot(np.arange(0.05,1.5,0.05),ni)
 # plt.show()
 
-for i,sn_name in enumerate(['SN2011bm']):#info[1:,0]):#
+for i,sn_name in enumerate(['SN2008ax']):#info[1:,0]):#
     if  (i>28)  :
          continue
     print sn_name

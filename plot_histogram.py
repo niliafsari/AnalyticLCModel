@@ -65,7 +65,9 @@ class deterministic_gen(stats.rv_continuous):
         return res
 
 deterministic = deterministic_gen(name="type_ii")
-print "det", deterministic.cdf(np.arange(0, 0.3, 0.01))
+
+plt.figure(3)
+plt.plot(np.arange(0, 0.7, 0.001), deterministic.cdf(np.arange(0, 0.7, 0.001)))
 
 
 
@@ -109,11 +111,8 @@ ax0 = plt.subplot(gs1[0])
 types1=np.array(types)
 arnett_ni=np.array(arnett_ni)
 ni=np.array(ni)
-# n, bins, patches = ax0.hist(arnett_ni, 20, histtype='step',density=True,
-#                            cumulative=True,lw=3,ls='--')
-# n, bins, patches = ax0.hist(ni, bins=bins, histtype='step', density=True,
-#                            cumulative=True, lw=3,color='#1f77b4')
-h, edges = np.histogram(arnett_ni, density=True, bins=15)
+
+h, edges = np.histogram(arnett_ni, density=True, bins=10000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -121,7 +120,7 @@ y = np.zeros_like(X)
 y[1:] = h.repeat(2)
 ax0.plot(X,y,color='#1f77b4',lw=3,label='Arnett',ls='--')
 
-h, edges = np.histogram(ni, density=True, bins=30)
+h, edges = np.histogram(ni, density=True, bins=20000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -152,7 +151,7 @@ ax0.tick_params(direction = 'in',which ='both')
 ax0.set_ylabel(r'Overall CDF',fontsize=18)
 
 ax1 = plt.subplot(gs1[1])
-h, edges = np.histogram(ni[types1=='Ic BL'], density=True, bins=12)
+h, edges = np.histogram(ni[types1=='Ic BL'], density=True, bins=10000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -160,7 +159,7 @@ y = np.zeros_like(X)
 y[1:] = h.repeat(2)
 ax1.plot(X,y,color='orange',lw=3,label='Ic-BL')
 
-h, edges = np.histogram(ni[types1=='Ic'], density=True, bins=12)
+h, edges = np.histogram(ni[types1=='Ic'], density=True, bins=10000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -169,7 +168,7 @@ y[1:] = h.repeat(2)
 ax1.plot(X,y,color='red',lw=3,label='Ic')
 
 
-h, edges = np.histogram(ni[types1=='Ib'], density=True, bins=12 )
+h, edges = np.histogram(ni[types1=='Ib'], density=True, bins=10000 )
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -178,7 +177,7 @@ y[1:] = h.repeat(2)
 ax1.plot(X,y,color='blue',lw=3,label='Ib')
 
 
-h, edges = np.histogram(ni[types1=='IIb'], density=True, bins=12)
+h, edges = np.histogram(ni[types1=='IIb'], density=True, bins=10000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -222,7 +221,7 @@ plt.gca().legend(loc='lower right',frameon=False,fontsize=16)
 
 ax2 = plt.subplot(gs1[2])
 
-h, edges = np.histogram(arnett_ni[types1=='Ic BL'], density=True, bins=12)
+h, edges = np.histogram(arnett_ni[types1=='Ic BL'], density=True, bins=10000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -230,9 +229,8 @@ y = np.zeros_like(X)
 y[1:] = h.repeat(2)
 ax2.plot(X,y,color='orange',lw=3,label='Ic-BL',ls='--')
 
-h, edges = np.histogram(arnett_ni[types1=='Ic'], density=True, bins=12)
+h, edges = np.histogram(arnett_ni[types1=='Ic'], density=True, bins=10000)
 h = np.cumsum(h)/np.cumsum(h).max()
-print h
 X = edges.repeat(2)[:-1]
 y = np.zeros_like(X)
 y[1:] = h.repeat(2)
@@ -240,7 +238,7 @@ ax2.plot(X,y,color='red',lw=3,label='Ic',ls='--')
 
 
 
-h, edges = np.histogram(arnett_ni[types1=='Ib'], density=True, bins=12 )
+h, edges = np.histogram(arnett_ni[types1=='Ib'], density=True, bins=10000 )
 h = np.cumsum(h)/np.cumsum(h).max()
 
 X = edges.repeat(2)[:-1]
@@ -250,27 +248,31 @@ ax2.plot(X,y,color='blue',lw=3,label='Ib',ls='--')
 
 
 from scipy import stats
-h = np.histogram(ni[(types1=='Ib')| (types1=='Ic')], density=True, bins=12)
-print "h,",h
+h = np.histogram(ni[(types1=='Ib')| (types1=='Ic')], density=True, bins=10000)
 hist_dist = stats.rv_histogram(h)
 d ,p = stats.kstest(list(ni[types1=='Ic BL']),hist_dist.cdf)
-print d, p*100
+print d, 100-p*100
 
 from scipy import stats
-h = np.histogram(ni[(types1=='Ib')], density=True, bins=12)
+h = np.histogram(ni[(types1=='Ib')], density=True, bins=10000)
 hist_dist = stats.rv_histogram(h)
 d ,p = stats.kstest(list(ni[types1=='Ic']),hist_dist.cdf)
 print d, p*100
 
 from scipy import stats
-h = np.histogram(ni[(types1=='IIb')], density=True, bins=12)
+h = np.histogram(ni[(types1=='IIb')], density=True, bins=10000)
 hist_dist = stats.rv_histogram(h)
-print "HIST", hist_dist.cdf(0.5)
+d ,p = stats.kstest(list(ni[ (types1=='Ib') | (types1=='Ic')]),hist_dist.cdf)
+print d, p*100
+
+
+from scipy import stats
+h = np.histogram(ni[(types1=='IIb')], density=True, bins=10000)
+hist_dist = stats.rv_histogram(h)
 d ,p = stats.kstest(list(ni[ (types1=='Ib')]),hist_dist.cdf)
 print d, p*100
 
-h, edges = np.histogram(arnett_ni[types1=='IIb'], density=True, bins=12)
-print "h", h.shape
+h, edges = np.histogram(arnett_ni[types1=='IIb'], density=True, bins=10000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
 
@@ -325,9 +327,16 @@ plt.gcf().savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/cdfs.pdf',
 
 f2 = plt.figure(2,figsize=(5,5))
 ax3=plt.subplot(111)
-d ,p = stats.kstest(list(ni),deterministic.cdf)
+d ,p = stats.kstest(ni,deterministic.cdf)
 data=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/CDF_typeII.csv',delimiter=',')
-print "typeII",d, p*100
+print "typeII",d, p
+
+
+d ,p = stats.kstest(ni[(types1=='Ib')| (types1=='Ic') | (types1=='IIb')],deterministic.cdf)
+data=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/CDF_typeII.csv',delimiter=',')
+print "typeII",d, p
+
+
 ax3.plot(data[:,0],data[:,1],color='green',lw=3,label='H-rich Type II (Anderson19)')
 data=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/CDF_SESNe.csv',delimiter=',')
 ax3.plot(data[:,0],data[:,1],color='salmon',lw=3,label='SESN (Anderson19)')
