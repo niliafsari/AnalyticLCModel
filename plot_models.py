@@ -53,6 +53,8 @@ f3=plt.figure(3)
 ax3=plt.subplot(111)
 
 
+
+
 dict={'Ic':'red', 'Ib':'blue','Ic BL':'orange', 'IcGRB':'orange','IIb':'green','Ib pec':'blue', 'Ibn':'blue'}
 dict_marker={'Ic':'o', 'Ib':'v','Ic BL':'s', 'IIb':'d','Ib pec':'v', 'Ibn':'v'}
 # Load all rows from the file into a variable called rows
@@ -122,7 +124,7 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
                          float(row[index_tail_ni_mass].split(";")[1]), 9.0 / 8.0)
             print "khatami", np.log10(lbol), "lpeak",float(row[index_lpeak].split(";")[0]),row[index_name]
             lfrac=(10**float(row[index_lpeak].split(";")[0]))/ lbol
-            lfac.append(lfrac)
+            lfac.append(1-1/lfrac)
             lfrac_err=lfrac*(np.sqrt((lbol_err/lbol)**2+(10**float(row[index_lpeak].split(";")[1])/10**float(row[index_lpeak].split(";")[0]))**2))
             ax3.errorbar(float(row[index_beta_req].split(";")[0]), lfrac, xerr=float(row[index_beta_req].split(";")[1]), yerr=lfrac_err,markersize=8,  marker=mark, mec='k',color=dict[row[index_sn_type]], label=row[index_name], linewidth=0.4)
             if dict[row[index_sn_type]]=='orange':
@@ -136,8 +138,7 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
 
 print np.median(lpeaks),np.median(tpeaks),np.median(lfac)
 
-print np.mean(lpeaks),np.mean(tpeaks),np.mean(lfac), (1-(1/np.mean(lfac)))*(10**np.mean(lpeaks))
-print 1-(1/np.median(lfac))
+# lfac= (1-(1/lfac))
 
 
 types=np.array(types)
@@ -182,13 +183,12 @@ ax3.tick_params(direction = 'in',which ='both')
 
 from SNAP5.Analysis.LCFitting import fit_bootstrap
 mni=np.logspace(np.log10(0.02),np.log10(1),5, endpoint=False)
-tpeaks=np.logspace(np.log10(5),np.log10(80),4, endpoint=False)
-#print tpeaks
-lpeak=np.zeros((mni.size,tpeaks.size))
-betas=np.zeros((mni.size,tpeaks.size))
+tpeaks_a=np.logspace(np.log10(5),np.log10(80),4, endpoint=False)
+lpeak=np.zeros((mni.size,tpeaks_a.size))
+betas=np.zeros((mni.size,tpeaks_a.size))
 count=0
 for i, ni in enumerate(mni):
-    for j,tp in enumerate(tpeaks):
+    for j,tp in enumerate(tpeaks_a):
         beta0 = 1.5
         lpeak[i,j]=valenti_bol(tp,ni,0)
         betafit = fit_bootstrap([beta0], [tp, ni],[lpeak[i,j]],[10**0.1], khatami_err,bounds=([0.0], [np.inf]),
@@ -217,43 +217,43 @@ ax.text(0.67, 1.75, '{}'.format(r'$t_{\rm p}$'),fontsize=13)
 
 
 mni=np.logspace(np.log10(0.01),np.log10(1),5, endpoint=True)
-tpeaks=np.linspace(5,80,5, endpoint=True)
+#tpeaks=np.linspace(5,80,5, endpoint=True)
 ax.fill_between(mni, np.min(np.min(betas)), np.max(np.max(betas)), color='lightgray')
 index_name = 0
 index_lpeak = 2
 index_tpeak = 1
 index_tail_ni_mass = 3
 names=[]
-lpeaks=[]
-tpeaks=[]
+lpeaks_d=[]
+tpeaks_d=[]
 nimasses=[]
 with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/dessart_models.txt", "r") as f_input:
     csv_reader = csv.reader(f_input, delimiter=",")
     rows = list(csv_reader)
     for row in rows:
         names.append(row[index_name])
-        lpeaks.append(float(row[index_lpeak].replace(")","").split("(")[0])*(10**float(row[index_lpeak].replace(")","").split("(")[1])))
-        tpeaks.append(float(row[index_tpeak].replace(")", "").split("(")[0]) *(10** float(
+        lpeaks_d.append(float(row[index_lpeak].replace(")","").split("(")[0])*(10**float(row[index_lpeak].replace(")","").split("(")[1])))
+        tpeaks_d.append(float(row[index_tpeak].replace(")", "").split("(")[0]) *(10** float(
             row[index_tpeak].replace(")", "").split("(")[1])))
         nimasses.append(float(row[index_tail_ni_mass].replace(")", "").split("(")[0]) * (10**float(
             row[index_tail_ni_mass].replace(")", "").split("(")[1])))
 e_Ni=3.90e10
 M_sun=1.9884e33
-plt.figure(2)
-ax2=plt.subplot(111)
+# plt.figure(2)
+# ax2=plt.subplot(111)
 for i,ni in enumerate(nimasses):
     #print ni
     if i == 0:
         label = 'Dessart16'
     else:
         label = None
-    betafit = fit_bootstrap([beta0], [tpeaks[i], ni], [lpeaks[i]], [1], khatami_err, bounds=([0.0], [np.inf]),
+    betafit = fit_bootstrap([beta0], [tpeaks_d[i], ni], [lpeaks_d[i]], [1], khatami_err, bounds=([0.0], [np.inf]),
                             errfunc=True, perturb=False, n=30, nproc=8)
     ax.scatter(ni, betafit[0][0], marker='^', s=120, color='yellow', edgecolor='k',label=label)
     #print tpeaks[i],lpeaks[i],ni
-    ax2.scatter(tpeaks[i],lpeaks[i]/(M_sun*ni*e_Ni) , marker='^', s=120, color='yellow', edgecolor='k')
-    mni=nickel_mass_khatami(tpeaks[i],lpeaks[i],10,9.0/8.0)
-    ax2.scatter( tpeaks[i],lpeaks[i] / (M_sun * mni[0] * e_Ni), marker='.', s=5, color='yellow', edgecolor='k')
+    # ax2.scatter(tpeaks[i],lpeaks[i]/(M_sun*ni*e_Ni) , marker='^', s=120, color='yellow', edgecolor='k')
+    # mni=nickel_mass_khatami(tpeaks[i],lpeaks[i],10,9.0/8.0)
+    # ax2.scatter( tpeaks[i],lpeaks[i] / (M_sun * mni[0] * e_Ni), marker='.', s=5, color='yellow', edgecolor='k')
 
 # folders=['N20','W18','Z9.6']
 # for f in folders:
@@ -289,7 +289,7 @@ for i,ni in enumerate(nimasses):
 #         ax.scatter(nickelmass, betafit[0][0], marker='p', s=100, color='springgreen', edgecolor='k', label=label)
 #         i=i+1
 
-dat=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/Tuguldur.dat', delimiter=',')
+dat=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/Nilou.dat', delimiter=',')
 print dat.shape[1]
 for i in range(0,dat.shape[0]):
     if dat[i,0]<8:
@@ -329,15 +329,54 @@ for lc in b:
 ax.legend(loc=3,fontsize=12,ncol=1,fancybox=True, frameon=False)
 ax3.legend(fontsize=12,ncol=1,fancybox=True, frameon=False)
 ax.set_ylim([0.005, 2])
-for tpeak in range(10,50,1):
-    ax2.set_xlim([10,50])
-    ax2.set_ylim([0.1,0.4])
-    ax2.scatter(tpeak,arnett_param(tpeak), marker='.', s=5, color='yellow', edgecolor='k')
-    ax2.set_xlim([10,50])
-    ax2.set_ylim([0.1,0.4])
+# for tpeak in range(10,50,1):
+#     ax2.set_xlim([10,50])
+#     ax2.set_ylim([0.1,0.4])
+#     ax2.scatter(tpeak,arnett_param(tpeak), marker='.', s=5, color='yellow', edgecolor='k')
+#     ax2.set_xlim([10,50])
+#     ax2.set_ylim([0.1,0.4])
 
 #print nickel_mass_khatami(17.5,6e42,10,1.3)
 
 f.savefig('./Plots/models.pdf')
+
+
+tpeaks=np.array(tpeaks)
+lpeaks=np.array(lpeaks)
+lfac=np.array(lfac)
+
+f4=plt.figure(4,figsize=(5,5))
+plt.subplots_adjust(wspace=None, hspace=None)
+ax4=plt.subplot(211)
+plt.subplots_adjust(wspace=None, hspace=None)
+plt.hist(tpeaks,bins=10, color='orange', ec='k')
+ax4.set_xlabel(r'$t_{\rm p}$ (days)',fontsize=15)
+ax4.set_ylabel(r'Count',fontsize=15)
+ax5=plt.subplot(212)
+plt.subplots_adjust(wspace=None, hspace=None)
+plt.hist(lpeaks,bins=10, color='yellow', ec='k')
+ax5.set_xlabel(r'Log $L_{\rm p} \ (\rm erg \ s^{-1})$',fontsize=15)
+ax5.set_ylabel(r'Count',fontsize=15)
+plt.subplots_adjust(wspace=None, hspace=None)
+# ax6=plt.subplot(313)
+# lfac=1-(1/lfac)
+# plt.hist(lfac,bins=10, color='salmon', ec='k')
+# ax6.set_xlabel(r'$f$',fontsize=15)
+plt.tight_layout()
+types=np.array(types)
+f4.savefig('./Plots/hists.pdf')
+
+print np.mean(tpeaks[types=='IIb']), np.median(tpeaks[types=='IIb']), np.std(tpeaks[types=='IIb']), np.mean(lpeaks[types=='IIb']), np.median(lpeaks[types=='IIb']), np.std(lpeaks[types=='IIb']), np.mean(lfac[types=='IIb']), np.median(lfac[types=='IIb']), np.std(lfac[types=='IIb'])
+print np.mean(tpeaks[types=='Ib']), np.median(tpeaks[types=='Ib']), np.std(tpeaks[types=='Ib']), np.mean(lpeaks[types=='Ib']), np.median(lpeaks[types=='Ib']), np.std(lpeaks[types=='Ib']), np.mean(lfac[types=='Ib']), np.median(lfac[types=='Ib']), np.std(lfac[types=='Ib'])
+print np.mean(tpeaks[types=='Ic']), np.median(tpeaks[types=='Ic']), np.std(tpeaks[types=='Ic']), np.mean(lpeaks[types=='Ic']), np.median(lpeaks[types=='Ic']), np.std(lpeaks[types=='Ic']), np.mean(lfac[types=='Ic']), np.median(lfac[types=='Ic']), np.std(lfac[types=='Ic'])
+print np.mean(tpeaks[types=='Ic BL']), np.median(tpeaks[types=='Ic BL']), np.std(tpeaks[types=='Ic BL']), np.mean(lpeaks[types=='Ic BL']), np.median(lpeaks[types=='Ic BL']), np.std(lpeaks[types=='Ic BL']), np.mean(lfac[types=='Ic BL']), np.median(lfac[types=='Ic BL']), np.std(lfac[types=='Ic BL'])
+print np.mean(tpeaks), np.median(tpeaks), np.std(tpeaks), np.mean(lpeaks), np.median(lpeaks), np.std(lpeaks), np.mean(lfac), np.median(lfac), np.std(lfac)
+print 10**np.mean(lpeaks)
+print zip(sn_names, lfac)
+print lfac
+import pandas as pd
+d = {'SN_name': sn_names, 'lfac': lfac}
+df = pd.DataFrame(data=d)
+df.to_csv('Data/lfrac.dat', index=False)
 
 plt.show()

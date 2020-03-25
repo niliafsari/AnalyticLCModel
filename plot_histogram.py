@@ -71,7 +71,8 @@ plt.plot(np.arange(0, 0.7, 0.001), deterministic.cdf(np.arange(0, 0.7, 0.001)))
 
 
 
-
+tpeaks=[]
+lpeaks=[]
 
 dict={'Ic':'red', 'Ib':'blue','Ic BL':'orange', 'IcGRB':'orange','IIb':'green','Ib pec':'blue', 'Ibn':'blue'}
 # Load all rows from the file into a variable called rows
@@ -98,6 +99,8 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
             # col = colors.next()
             sn_names.append(row[index_name])
             sn_type.append(row[index_sn_type])
+            tpeaks.append(row[index_tpeak])
+            lpeaks.append(row[index_lpeak])
             line=line+1
             arnett_ni.append(float(row[index_arnett_ni_mass].split(";")[0]))
             ni.append(float(row[index_tail_ni_mass].split(";")[0]))
@@ -110,6 +113,8 @@ gs1.update(wspace=0.0, hspace=0.0)
 ax0 = plt.subplot(gs1[0])
 types1=np.array(types)
 arnett_ni=np.array(arnett_ni)
+tpeaks=np.array(tpeaks)
+lpeaks=np.array(lpeaks)
 ni=np.array(ni)
 
 h, edges = np.histogram(arnett_ni, density=True, bins=10000)
