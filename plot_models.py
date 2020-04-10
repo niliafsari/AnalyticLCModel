@@ -241,6 +241,7 @@ e_Ni=3.90e10
 M_sun=1.9884e33
 # plt.figure(2)
 # ax2=plt.subplot(111)
+dessart_beta=[]
 for i,ni in enumerate(nimasses):
     #print ni
     if i == 0:
@@ -249,12 +250,13 @@ for i,ni in enumerate(nimasses):
         label = None
     betafit = fit_bootstrap([beta0], [tpeaks_d[i], ni], [lpeaks_d[i]], [1], khatami_err, bounds=([0.0], [np.inf]),
                             errfunc=True, perturb=False, n=30, nproc=8)
+    dessart_beta.append(betafit[0][0])
     ax.scatter(ni, betafit[0][0], marker='^', s=120, color='yellow', edgecolor='k',label=label)
     #print tpeaks[i],lpeaks[i],ni
     # ax2.scatter(tpeaks[i],lpeaks[i]/(M_sun*ni*e_Ni) , marker='^', s=120, color='yellow', edgecolor='k')
     # mni=nickel_mass_khatami(tpeaks[i],lpeaks[i],10,9.0/8.0)
     # ax2.scatter( tpeaks[i],lpeaks[i] / (M_sun * mni[0] * e_Ni), marker='.', s=5, color='yellow', edgecolor='k')
-
+print "dessart" , np.min(np.array (dessart_beta)),np.mean(np.array (dessart_beta)), np.max(np.array (dessart_beta))
 # folders=['N20','W18','Z9.6']
 # for f in folders:
 # nickels=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/light_curves/nickel_mass.txt', delimiter=',')
@@ -291,6 +293,7 @@ for i,ni in enumerate(nimasses):
 
 dat=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/Nilou.dat', delimiter=',')
 print dat.shape[1]
+ertl_beta=[]
 for i in range(0,dat.shape[0]):
     if dat[i,0]<8:
         if i == 0:
@@ -300,15 +303,17 @@ for i in range(0,dat.shape[0]):
         #print dat[i,1], dat[i,3]
         betafit = fit_bootstrap([beta0], [dat[i,1], dat[i,3]], [10**dat[i,2]], [1], khatami_err, bounds=([0.0], [np.inf]),
                                 errfunc=True, perturb=False, n=30, nproc=8)
+        ertl_beta.append(betafit[0][0])
         ax.scatter(dat[i,3], betafit[0][0], marker='p', s=100, color='springgreen', edgecolor='k',label=label)
         #ax.text(dat[i,3], betafit[0][0] - 0.085, '{}'.format(dat[i,0]), fontsize=13)
     #print tpeaks[i],lpeaks[i],ni
     # ax2.scatter(tpeaks[i],lpeaks[i]/(M_sun*ni*e_Ni) , marker='^', s=120, color='yellow', edgecolor='k')
     # mni=nickel_mass_khatami(tpeaks[i],lpeaks[i],10,9.0/8.0)
     # ax2.scatter( tpeaks[i],lpeaks[i] / (M_sun * mni[0] * e_Ni), marker='.', s=5, color='yellow', edgecolor='k')
-
+print "ertl:", np.min(np.array(ertl_beta)),np.mean(np.array(ertl_beta)), np.max(np.array(ertl_beta))
 b=glob.glob("Data/*_barnes.csv")
 i=0
+beta_barnes=[]
 for lc in b:
     if i == 0:
         label = 'Barnes18'
@@ -322,9 +327,17 @@ for lc in b:
     t_p=17.5
     betafit = fit_bootstrap([beta0], [t_p, nickelmass], [LC_p], [1], khatami_err, bounds=([0.0], [np.inf]),
                             errfunc=True, perturb=False, n=300, nproc=8)
-    #print betafit
+    beta_barnes.append(betafit[0][0])
     ax.scatter(nickelmass, betafit[0][0], marker='*', s=120, color='salmon', edgecolor='k', label=label)
     i=i+1
+
+print "barnes",np.min(np.array(beta_barnes)),np.max(np.array(beta_barnes))
+ax.plot(np.arange(0.001,1.1,0.1),np.repeat(1.125,(11,)),ls='--',color='k')
+ax.text(0.011, 1.125+0.03, r'$\beta=1.125$',fontsize=13)
+ax.plot(np.arange(0.001,1.1,0.1),np.repeat(1.6,(11,)),ls='--',color='k')
+ax.text(0.011, 1.6+0.03, r'$\beta=1.6$',fontsize=13)
+ax.plot(np.arange(0.001,1.1,0.1),np.repeat(0.82,(11,)),ls='--',color='k')
+ax.text(0.011, 0.82+0.03, r'$\beta=0.82$',fontsize=13)
 
 ax.legend(loc=3,fontsize=12,ncol=1,fancybox=True, frameon=False)
 ax3.legend(fontsize=12,ncol=1,fancybox=True, frameon=False)

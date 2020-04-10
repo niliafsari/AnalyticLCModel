@@ -388,7 +388,7 @@ print np.mean(beta_req[types=='IIb']),np.mean(beta_req[types=='Ib']),np.mean(bet
 print np.std(beta_req[types=='IIb']),np.std(beta_req[types=='Ib']),np.std(beta_req[types=='Ic']),np.std(beta_req[types=='Ic BL'])
 print np.mean(beta_req),np.median(beta_req),np.std(beta_req)
 
-ax7.set_ylabel(r'Tuned $\beta$',fontsize=20)
+ax7.set_ylabel(r'Calibrated $\beta$',fontsize=20)
 ax7.set_xlabel(r'Tail $M_{\rm Ni} \ (M_\odot$)',fontsize=20)
 ax7.set_xscale("log")
 ax7.xaxis.set_ticks_position('both')

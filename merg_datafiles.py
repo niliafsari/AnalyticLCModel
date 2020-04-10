@@ -131,7 +131,7 @@ ab = np.zeros((28,), dtype=[('SN name', 'U10'), ('Host','U16'),('Type','U5'),('D
                             ('E(B-V)_host', np.float64),('E(B-V)_host_e', np.float64), ('t0', np.float64),('t0_e', np.float64)])
 res = np.zeros((28,), dtype=[('SN name', 'U10'), ('BC bands','U16'),('Lpeak',np.float64),('Lpeak_e',np.float64),('Tpeak', np.float64),('Tpeak_e', np.float64),
                             ('mni_tail', np.float64),('mni_tail_e', np.float64),('T0', np.float64),('T0_e', np.float64),('mni_arnett', np.float64),('mni_arnett_e', np.float64),
-                            ('beta', np.float64),('beta_e', np.float64)])
+                            ('beta', np.float64),('beta_e', np.float64),('khatami_mni', np.float64),('khatami_mni_e', np.float64)])
 ab['SN name'] = sn_names
 ab['Host'] = np.array(sn_host)
 ab['Type'] = np.array(sn_type)
@@ -157,6 +157,9 @@ res['T0']=np.round(np.array(T0),1)
 res['T0_e']=np.round(np.array(T0_e),1)
 res['beta']=np.round(np.array(beta_req),2)
 res['beta_e']=np.round(np.array(beta_req_e),2)
-
-np.savetxt("Data/table1_26dec.csv", ab, fmt="%10s & %12s & %6s & %10.1f (%10.1f) & %10.4f (%10.4f) & %10.2f (%10.2f) & %10.1f (%10.1f)", newline=' \\\\\n')
-np.savetxt("Data/table2_26dec.csv", res, fmt="%10s & $%6s$ & %10.2f (%10.2f) & %10.1f (%10.1f) & %10.3f (%10.3f) & %10.1f (%10.1f) & %10.2f (%10.2f) & %10.2f (%10.2f)", newline=' \\\\\n')
+import pandas as pd
+df=pd.read_csv('./Data/khatamiMni.csv')
+res['khatami_mni']=np.round(np.array(df['Mni']),3)
+res['khatami_mni_e']=np.round(np.array(df['Mni_e']),3)
+#np.savetxt("Data/table1_26dec.csv", ab, fmt="%10s & %12s & %6s & %10.1f (%10.1f) & %10.4f (%10.4f) & %10.2f (%10.2f) & %10.1f (%10.1f)", newline=' \\\\\n')
+np.savetxt("Data/table2_26dec.csv", res, fmt="%10s & $%6s$ & %10.2f (%10.2f) & %10.1f (%10.1f) & %10.3f (%10.3f) & %10.1f (%10.1f) & %10.2f (%10.2f) & %10.2f (%10.2f) & %10.3f (%10.3f) ", newline=' \\\\\n')

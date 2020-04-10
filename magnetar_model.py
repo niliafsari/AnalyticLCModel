@@ -90,7 +90,7 @@ for index, row in df.iterrows():
     if df_lfrac[df_lfrac['SN_name']==row['name']].iloc[0,1]>0:
         mag_properties= ((10**float(row['peakL'].split(';')[0]))*df_lfrac[df_lfrac['SN_name']==row['name']].iloc[0,1],float(row['peakt'].split(';')[0])*(3600.0*24),Mej)
         lpeak_add_list.append((10 ** float(row['peakL'].split(';')[0]))* (df_lfrac[df_lfrac['SN_name'] == row['name']].iloc[0, 1]))
-        #print mag_properties, (10**float(row['peakL'].split(';')[0]))*df_lfrac[df_lfrac['SN_name']==row['name']].iloc[0,1]
+        print row['name'], mag_properties
         x, y =  fsolve(magnetar_eq, (10, 10),args=mag_properties)
         #res = least_squares(magnetar_eq, (40, 20), bounds=((1, 1), (100, 100)),args=mag_properties,max_nfev=100000)
         #p,b=res.x
@@ -99,9 +99,20 @@ for index, row in df.iterrows():
         print row['name'], df_lfrac[df_lfrac['SN_name']==row['name']].iloc[0,1], x, y
 df_save.to_csv('Data/magnetar_2.csv',index=False)
 
-
+print "mean",np.mean(np.array(lpeak_add_list))
 mag_5=pd.read_csv('Data/magnetar_5.csv')
 mag_2=pd.read_csv('Data/magnetar_2.csv')
+
+
+
+print "p",np.min(mag_2['p']),np.max(mag_2['p']), np.mean(mag_2['p'])
+print "b",np.min(mag_2['b']),np.max(mag_2['b']), np.mean(mag_2['b'])
+
+print "p",np.min(mag_5['p']),np.max(mag_5['p']), np.mean(mag_5['p'])
+print "b",np.min(mag_5['b']),np.max(mag_5['b']), np.mean(mag_5['b'])
+
+
+
 
 import matplotlib.pyplot as plt
 import matplotlib
