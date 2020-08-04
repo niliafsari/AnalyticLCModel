@@ -64,11 +64,19 @@ ax8=plt.subplot(111)
 
 f9 = plt.figure(9,figsize=(8,5))
 ax9=plt.subplot(111)
-f10 = plt.figure(10)
-ax10=plt.subplot(111)
+# f10 = plt.figure(10,figsize=(5,9))
+# ax10=plt.subplot(211)
+#
+# #f11 = plt.figure(11)
+# ax11=plt.subplot(212)
 
-
-
+import matplotlib.gridspec as gridspec
+f10 = plt.figure(10,figsize=(7,9))
+gs1 = gridspec.GridSpec(2, 1)
+gs1.update(wspace=0.0, hspace=0.0)
+ax10 = plt.subplot(gs1[0])
+ax11 = plt.subplot(gs1[1])
+marker_dict={}
 dict={'Ic':'red', 'Ib':'blue','Ic BL':'orange', 'IcGRB':'orange','IIb':'green','Ib pec':'blue', 'Ibn':'blue'}
 # Load all rows from the file into a variable called rows
 yflag=0
@@ -82,6 +90,7 @@ blue_marker=[]
 red_marker=[]
 green_marker=[]
 types=[]
+ni_e=[]
 beta_req=[]
 dict_list={'orange':orange_marker,'blue':blue_marker, 'red':red_marker, 'green':green_marker}
 with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec.csv", "r") as f_input:
@@ -112,6 +121,7 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
             line=line+1
             arnett_ni.append(float(row[index_arnett_ni_mass].split(";")[0]))
             ni.append(float(row[index_tail_ni_mass].split(";")[0]))
+            ni_e.append(float(row[index_tail_ni_mass].split(";")[1]))
             types.append(row[index_sn_type])
             beta_req.append(float(row[index_beta_req].split(";")[0]))
             ax.errorbar(float(row[index_tail_ni_mass].split(";")[0]),float(row[index_arnett_ni_mass].split(";")[0]),
@@ -128,6 +138,7 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
                                                                              color=dict[row[index_sn_type]],
                                                                              label=row[index_name], linewidth=0.4,
                                                                              elinewidth=0.5, mec='k')
+            marker_dict[row[index_name]]=mark
             if dict[row[index_sn_type]]=='orange':
                 orange_marker.append(mark)
             elif dict[row[index_sn_type]]=='blue':
@@ -192,33 +203,32 @@ plt.tight_layout()
 ax.set_aspect('equal', adjustable='box')
 f.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Arnett_Tail1.pdf', bbox_inches='tight')
 
-plt.figure(10)
+#plt.figure(10)
 #plt.figure(9,figsize=(10,10))
-# ax10.legend(loc=1,bbox_to_anchor=(1.32,1.1),
-#           fancybox=True, ncol=1, fontsize =8)
-ax10.legend(loc='center', bbox_to_anchor=(1.05,-0.05,0.3,1),
-          fancybox=True, ncol=1, fontsize =12,labelspacing=0.05,handletextpad=0.2)
+#ax10.legend(loc=1,fancybox=True, ncol=1, fontsize =12,labelspacing=0.05)
+ax10.legend(loc='center', bbox_to_anchor=(1.05,-0.5,0.26,1),
+          fancybox=True, ncol=1, fontsize =13,labelspacing=0.45,handletextpad=0.2)
 
 #legend1 = plt.legend(plot_lines[0], ["algo1", "algo2", "algo3"], loc=1)
 lines = ax10.get_lines()
-plt.annotate(r'Ic-BL',color=dict['Ic BL'],
+ax10.annotate(r'Ic-BL',color=dict['Ic BL'],
              xy=(0.1, 0.9),
              xycoords='axes fraction', fontsize=16)
-plt.annotate(r'IIb',color=dict['IIb'],
+ax10.annotate(r'IIb',color=dict['IIb'],
              xy=(0.1, 0.85),
              xycoords='axes fraction', fontsize=16)
-plt.annotate(r'Ib',color=dict['Ib'],
+ax10.annotate(r'Ib',color=dict['Ib'],
              xy=(0.1, 0.75),
              xycoords='axes fraction', fontsize=16)
-plt.annotate(r'Ic',color=dict['Ic'],
+ax10.annotate(r'Ic',color=dict['Ic'],
              xy=(0.1, 0.8),
              xycoords='axes fraction', fontsize=16)
 
 ax10.set_xscale("log")
 ax10.set_yscale("log")
-plt.loglog(np.arange(0.001, 1.1, 0.01),np.arange(0.001, 1.1, 0.01),'--',color='black',linewidth=1)
-plt.xlim(0.01, 1)
-plt.ylim(0.01, 1)
+ax10.loglog(np.arange(0.001, 1.1, 0.01),np.arange(0.001, 1.1, 0.01),'--',color='black',linewidth=1)
+ax10.set_xlim(0.01, 1)
+ax10.set_ylim(0.01, 1)
 #plt.loglog(np.arange(0, 1, 0.1),np.arange(0, 1, 0.1),'--',color='black',linewidth=1)
 # ax9.yaxis.set_minor_locator(AutoMinorLocator(5))
 # ax9.xaxis.set_minor_locator(AutoMinorLocator(5))
@@ -229,8 +239,76 @@ ax10.yaxis.set_ticks_position('both')
 ax10.tick_params(direction = 'in',which ='both')
 ax10.set_aspect('equal', adjustable='box')
 ax10.set_ylabel(r'Arnett $ M_{\rm Ni} \ (M_\odot$)',fontsize=20)
-ax10.set_xlabel(r'Tail $ M_{\rm Ni} \ (M_\odot$)',fontsize=20)
-f10.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Arnett_Tail_loglog.pdf', bbox_inches='tight')
+ax10.set_xticklabels([])
+# yticks = ax10.yaxis.get_major_ticks()
+# ax10.yaxis.set_major_ticks(ax10.yaxis.get_major_ticks()[1:])
+# labels = [item.label1 for item in ax10.yaxis.get_major_ticks()]
+# print labels
+ax10.set_yticks([0.1,1])
+#ax.set_xticklabels(labels)
+#ax10.set_xlabel(r'Tail $ M_{\rm Ni} \ (M_\odot$)',fontsize=20)
+#f10.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Arnett_Tail_loglog.pdf', bbox_inches='tight')
+
+
+import pandas as pd
+df=pd.read_csv('./Data/khatamiMni.csv')
+
+#plt.figure(11)
+#plt.figure(9,figsize=(10,10))
+# ax10.legend(loc=1,bbox_to_anchor=(1.32,1.1),
+#           fancybox=True, ncol=1, fontsize =8)
+marker = itertools.cycle(('p','>','^','v','<','s', 'o','h','d','D','*','P','X','H'))
+for i in range(0,27):
+    mark=marker.next()
+    name=sn_names[i]
+    index=np.where(np.array(df['name'])==name)
+    index=np.array(index).item(0)
+    #print name,np.array(index).item(0),np.array(df['name']), df.iloc[0,2]
+    ax11.errorbar(ni[i], df.iloc[index,2],
+                  xerr=ni_e[i],
+                  yerr=df.iloc[index,3],
+                  marker=marker_dict[name], color=dict[df.iloc[index,1]], label=name, markersize=7, linewidth=0.4,
+                  elinewidth=0.5, mec='k')
+
+# ax11.legend(loc='center', bbox_to_anchor=(1.05,-0.05,0.3,1),
+#           fancybox=True, ncol=1, fontsize =12,labelspacing=0.05,handletextpad=0.2)
+
+#legend1 = plt.legend(plot_lines[0], ["algo1", "algo2", "algo3"], loc=1)
+lines = ax11.get_lines()
+# ax11.annotate(r'Ic-BL',color=dict['Ic BL'],
+#              xy=(0.1, 0.9),
+#              xycoords='axes fraction', fontsize=16)
+# ax11.annotate(r'IIb',color=dict['IIb'],
+#              xy=(0.1, 0.85),
+#              xycoords='axes fraction', fontsize=16)
+# ax11.annotate(r'Ib',color=dict['Ib'],
+#              xy=(0.1, 0.75),
+#              xycoords='axes fraction', fontsize=16)
+# ax11.annotate(r'Ic',color=dict['Ic'],
+#              xy=(0.1, 0.8),
+#              xycoords='axes fraction', fontsize=16)
+
+ax11.set_xscale("log")
+ax11.set_yscale("log")
+ax11.loglog(np.arange(0.001, 1.1, 0.01),np.arange(0.001, 1.1, 0.01),'--',color='black',linewidth=1)
+ax11.set_xlim(0.01, 1)
+ax11.set_ylim(0.01, 1)
+#plt.loglog(np.arange(0, 1, 0.1),np.arange(0, 1, 0.1),'--',color='black',linewidth=1)
+# ax9.yaxis.set_minor_locator(AutoMinorLocator(5))
+# ax9.xaxis.set_minor_locator(AutoMinorLocator(5))
+# ax.xaxis.set_tick_params(width=1.5)
+# ax.yaxis.set_tick_params(width=1.5)
+ax11.xaxis.set_ticks_position('both')
+ax11.yaxis.set_ticks_position('both')
+ax11.tick_params(direction = 'in',which ='both')
+ax11.set_aspect('equal', adjustable='box')
+ax11.set_ylabel(r'KK19 $ M_{\rm Ni} \ (M_\odot$)',fontsize=20)
+ax11.set_xlabel(r'Tail $ M_{\rm Ni} \ (M_\odot$)',fontsize=20)
+# f10.tight_layout()
+# f10.subplots_adjust(wspace=0, hspace=0)
+f10.tight_layout()
+f10.savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/Ni_Khatami_Tail_loglog.pdf', bbox_inches='tight')
+
 
 
 plt.figure(9)

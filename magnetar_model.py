@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.optimize import fsolve
 import math
-
+from valenti_ni56 import *
 
 
 def MagnetarLightCurve(t, Ep, tp):
@@ -190,10 +190,11 @@ print tail_data.shape
 ax=plt.subplot(111)
 plt.plot(tail_data[((tail_data[:,0] >= 60) & (tail_data[:,0] < 120)),0],tail_data[((tail_data[:,0] >= 60) & (tail_data[:,0] < 120)),1],'k',lw=2,label=r'SN $L_{\rm bol}$')
 plt.plot(peak_data[:,0],peak_data[:,1],'k',lw=2)
-t,le,lm,lf=DiffusionMagnetarLightCurve(mag_5[mag_5['name']==name].iloc[0,2],mag_5[mag_5['name']==name].iloc[0,1],0.1,1e51,5,100)
+t,le,lm,lf=DiffusionMagnetarLightCurve(mag_5[mag_5['name']==name].iloc[0,2],mag_5[mag_5['name']==name].iloc[0,1],0.1,1e51,5,800)
 plt.plot(t,1.35*lm,'b',label=r'Magnetar $M_{\rm ej}=5 M_{\odot}, B_{14}=23, P=9~ms$',lw=2)
-t,le,lm,lf=DiffusionMagnetarLightCurve(mag_2[mag_2['name']==name].iloc[0,2],mag_2[mag_2['name']==name].iloc[0,1],0.1,1e51,2,100)
+t,le,lm,lf=DiffusionMagnetarLightCurve(mag_2[mag_2['name']==name].iloc[0,2],mag_2[mag_2['name']==name].iloc[0,1],0.1,1e51,2,800)
 plt.plot(t,1.35*lm,'orange',label=r'Magnetar $M_{\rm ej}=2 M_{\odot}, B_{14}=17, P=62~ms$',lw=2)
+# plt.plot(t,valenti_bol(t,0.1,0))
 ax.xaxis.set_ticks_position('both')
 ax.yaxis.set_ticks_position('both')
 ax.set_yscale("log")
@@ -206,12 +207,12 @@ ax.axhline(y=5.9e41, color='r',ls='--',lw=2)
 #              xycoords='axes fraction',
 #              textcoords='offset points', fontsize=18)
 plt.gca().xaxis.set_minor_locator(AutoMinorLocator(5))
-plt.legend(frameon=False, fontsize=11)
-plt.gca().set_xlim([-5, 140])
+plt.legend(frameon=False, fontsize=10)
+plt.gca().set_xlim([-5, 150])
 plt.gca().set_ylim([5e40, 3e42])
 plt.xlabel(r'Time (days)',fontsize=20)
 plt.ylabel(r'$ L_{\rm bol} \ (\rm \ erg \ s^{-1})$',fontsize=20)
 plt.tight_layout()
-plt.savefig('./Plots/'+name+'_magnetar.pdf')
+#plt.savefig('./Plots/'+name+'_magnetar.pdf')
 plt.show()
 

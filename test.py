@@ -40,17 +40,23 @@ from lyman_BC import  *
 #
 # plt.gca().invert_yaxis()
 
-tp=7.8
-Lp=42.6
+tp=15
+beta0=1
+beta=[]
+Lp=np.arange(41.8,45,0.1)
+#Lp=42.5
+#tp=np.logspace(0,3,100)
+mni=0.05
+for i,lp in enumerate(Lp):
+    print i,lp
+    betafit = fit_bootstrap([beta0], [tp, mni], [10**lp], [1], khatami_err, bounds=([-10], [np.inf]),
+                            errfunc=True, perturb=False, n=300, nproc=8)
+    beta.append(betafit[0][0])
+    print betafit[0][0]
+    #mni[i]=nickel_mass_khatami(tp,10**Lp,0.1,b)[0]
 
-beta=np.arange(-2,2,0.0001)
-mni=np.zeros(beta.shape)
-for i,b in enumerate(beta):
-    print i,b
-    mni[i]=nickel_mass_khatami(tp,10**Lp,0.1,b)[0]
 
 
-
-plt.plot(beta,mni)
+plt.plot(Lp,beta)
 #plt.legend()
 plt.show()
