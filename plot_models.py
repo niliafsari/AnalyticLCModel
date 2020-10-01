@@ -70,6 +70,7 @@ green_marker=[]
 types=[]
 beta_req=[]
 lfac=[]
+lpf=[]
 lpeaks=[]
 tpeaks=[]
 tpeaks_e=[]
@@ -131,6 +132,7 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
             print "khatami", np.log10(lbol), "lpeak",float(row[index_lpeak].split(";")[0]),row[index_name]
             lfrac=(10**float(row[index_lpeak].split(";")[0]))/ lbol
             lfac.append(1-1/lfrac)
+            lpf.append((10**float(row[index_lpeak].split(";")[0]))*(1-1/lfrac))
             lfrac_err=lfrac*(np.sqrt((lbol_err/lbol)**2+(10**float(row[index_lpeak].split(";")[1])/10**float(row[index_lpeak].split(";")[0]))**2))
             ax3.errorbar(float(row[index_beta_req].split(";")[0]), lfrac, xerr=float(row[index_beta_req].split(";")[1]), yerr=lfrac_err,markersize=8,  marker=mark, mec='k',color=dict[row[index_sn_type]], label=row[index_name], linewidth=0.4)
             if dict[row[index_sn_type]]=='orange':
@@ -152,6 +154,40 @@ df_models['beta']=beta_req
 df_models['Mni']=ni
 df_models['model']=sn_names
 print(df_models)
+
+columns=['name','Lp','f','Lp|f|']
+df2= pd.DataFrame(columns=columns)
+df2['Lp']=lpeaks
+df2['Lp|f|']=np.log10(np.array(lpf))
+df2['f']=lfac
+df2['name']=sn_names
+df2.to_csv('Data/lpf.csv', index=False)
+
+
+
+lpeaks=np.array(lpeaks)
+sn_type=np.array(sn_type)
+lfac=np.array(lfac)
+
+
+print "IIb",np.log10(np.mean(10**(lpeaks[sn_type=='IIb']))),np.log10(np.median(10**(lpeaks[sn_type=='IIb']))), np.std(np.log10(10**(lpeaks[sn_type=='IIb'])))
+print "Ib",np.log10(np.mean(10**(lpeaks[sn_type=='Ib']))),np.log10(np.median(10**(lpeaks[sn_type=='Ib']))), np.std(np.log10(10**(lpeaks[sn_type=='Ib'])))
+print "Ic",np.log10(np.mean(10**(lpeaks[sn_type=='Ic']))),np.log10(np.median(10**(lpeaks[sn_type=='Ic']))), np.std(np.log10(10**(lpeaks[sn_type=='Ic'])))
+print "Ic-BL:",np.log10(np.mean(10**(lpeaks[sn_type=='Ic BL']))),np.log10(np.median(10**(lpeaks[sn_type=='Ic BL']))), np.std(np.log10(10**(lpeaks[sn_type=='Ic BL'])))
+print "all:",np.log10(np.mean(10**(lpeaks))),np.log10(np.median(10**(lpeaks))), np.std(np.log10(10**(lpeaks)))
+
+# lpeaks=lpeaks[lfac>0]
+# print lpeaks
+# sn_type=sn_type[lfac>0]
+# lfac=lfac[lfac>0]
+# lpeaks=np.log10(np.multiply(10**lpeaks,lfac))
+# print "IIb",np.log10(np.mean(10**(lpeaks[sn_type=='IIb']))),np.log10(np.median(10**(lpeaks[sn_type=='IIb']))), np.std(np.log10(10**(lpeaks[sn_type=='IIb'])))
+# print "Ib",np.log10(np.mean(10**(lpeaks[sn_type=='Ib']))),np.log10(np.median(10**(lpeaks[sn_type=='Ib']))), np.std(np.log10(10**(lpeaks[sn_type=='Ib'])))
+# print "Ic",np.log10(np.mean(10**(lpeaks[sn_type=='Ic']))),np.log10(np.median(10**(lpeaks[sn_type=='Ic']))), np.std(np.log10(10**(lpeaks[sn_type=='Ic'])))
+# print "Ic-BL:",np.log10(np.mean(10**(lpeaks[sn_type=='Ic BL']))),np.log10(np.median(10**(lpeaks[sn_type=='Ic BL']))), np.std(np.log10(10**(lpeaks[sn_type=='Ic BL'])))
+# print "all:",np.log10(np.mean(10**(lpeaks))),np.log10(np.median(10**(lpeaks))), np.std(np.log10(10**(lpeaks)))
+
+
 types=np.array(types)
 beta_req=np.array(beta_req)
 ni_plot=np.array(ni)
@@ -197,7 +233,7 @@ for i, ni in enumerate(mni):
     ax.plot(np.repeat(ni,betas[i,:].shape),betas[i,:],marker='x',ls='-',color='k',lw=0.5)
     #ax.text(ni, 1.49, '{}'.format(np.round(ni,2)),fontsize=10)
 ax.plot(mni,betas,marker='x',ls='-',color='k',lw=0.5)
-ax.text(0.05, 1.47, '{}'.format(r'$M_{\rm Ni}$'),fontsize=13)
+#ax.text(0.05, 1.47, '{}'.format(r'$M_{\rm Ni}$'),fontsize=13)
 ax.text(0.67, 1.75, '{}'.format(r'$t_{\rm p}$'),fontsize=13)
 
 
@@ -262,6 +298,28 @@ for i in range(0,dat.shape[0]):
 
         ax.scatter(dat[i,3], betafit[0][0], marker='p', s=100, color='springgreen', edgecolor='k',label=label)
 
+dat=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/Io_data.csv', delimiter=',')
+print dat.shape[1]
+io_beta=[]
+Msun = 4.74
+Lsun = 3.84e33
+
+for i in range(0,dat.shape[0]):
+    if i == 0:
+        label = 'Kleiser18 (Ib/c)'
+    else:
+        label = None
+    #print dat[i,1], dat[i,3]
+    lbol = Lsun * np.power(10, ((Msun - dat[i,1]) / 2.5))
+    betafit = fit_bootstrap([beta0], [dat[i,0], dat[i,2]], [lbol], [1], khatami_err, bounds=([0.0], [np.inf]),
+                            errfunc=True, perturb=False, n=30, nproc=8)
+    #ertl_beta.append(betafit[0][0])
+    df_models = df_models.append(
+        pd.Series([dat[i,0], np.log10(lbol), betafit[0][0], dat[i,2], 'Kleiser'], index=df_models.columns),
+        ignore_index=True)
+
+    ax.scatter(dat[i,2], betafit[0][0], marker='<', s=100, color='m', edgecolor='k',label=label)
+
 print "ertl:", np.min(np.array(ertl_beta)),np.mean(np.array(ertl_beta)), np.max(np.array(ertl_beta))
 b=glob.glob("Data/*_barnes.csv")
 i=0
@@ -295,11 +353,12 @@ ax.text(0.011, 1.6+0.03, r'$\beta=1.6$',fontsize=13)
 ax.plot(np.arange(0.001,1.1,0.1),np.repeat(0.82,(11,)),ls='--',color='k')
 ax.text(0.011, 0.82+0.03, r'$\beta=0.82$',fontsize=13)
 handles, labels = ax.get_legend_handles_labels()
-order=[3,6,4,5,2,1,0]
-ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc=3,fontsize=12,ncol=1,fancybox=True, frameon=False)
+print labels
+order=[4,7,5,6,1,2,3,0]
+ax.legend([handles[idx] for idx in order],[labels[idx] for idx in order],loc=3,fontsize=11,ncol=1,fancybox=True, frameon=False)
 
 ax3.legend(fontsize=12,ncol=1,fancybox=True, frameon=False)
-ax.set_ylim([0.005, 2])
+ax.set_ylim([-0.005, 2])
 
 
 f.savefig('./Plots/models.pdf')

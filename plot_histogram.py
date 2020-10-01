@@ -78,17 +78,23 @@ class deterministic_gen(stats.rv_continuous):
     def _cdf(self, x):
         dat=np.loadtxt('/home/afsari/PycharmProjects/typeIbcAnalysis/Data/CDF_typeII.csv',delimiter=',')
         dat=dat[np.argsort(dat[:,0]),:]
+        f=0.47944894183
         res=np.zeros((x.shape[0]))
         for i,value in enumerate(list(x)):
-            res[i]=dat[find_nearest(dat[:,0],value),1]
+            if value<0.03:
+                res[i]=0
+            else:
+                res[i]=(dat[find_nearest(dat[:,0],value),1]-f)*(1/(1-f))
         return res
 
 deterministic = deterministic_gen(name="type_ii")
 
+print "frac of uunder 0.03 msun",deterministic.cdf(0.03)
+
 plt.figure(3)
 plt.plot(np.arange(0, 0.7, 0.001), deterministic.cdf(np.arange(0, 0.7, 0.001)))
 
-
+plt.show()
 
 tpeaks=[]
 lpeaks=[]
@@ -127,32 +133,40 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
             ni_e.append(float(row[index_tail_ni_mass].split(";")[1]))
             types.append(row[index_sn_type].split(";")[0])
 
-# import matplotlib.gridspec as gridspec
-# f = plt.figure(1,figsize=(5,13))
-# gs1 = gridspec.GridSpec(4, 1)
-# gs1.update(wspace=0.0, hspace=0.0)
-# ax0 = plt.subplot(gs1[0])
-# types1=np.array(types)
-# arnett_ni=np.array(arnett_ni)
-# arnett_ni_e=np.array(arnett_ni_e)
-# tpeaks=np.array(tpeaks)
-# lpeaks=np.array(lpeaks)
-# ni=np.array(ni)
-# ni_e=np.array(ni_e)
-# khatami_ni=np.array(df['Mni'].tolist())
-# khatami_ni_e=np.array(df['Mni_e'].tolist())
-# khatami_type=np.array(df['type'].tolist())
-# h, edges = np.histogram(arnett_ni, density=True, bins=10000)
-# h = np.cumsum(h)/np.cumsum(h).max()
-#
-# X = edges.repeat(2)[:-1]
-# y = np.zeros_like(X)
-# y[1:] = h.repeat(2)
-# ax0.plot(X,y,color='olive',lw=2,label='Arnett')
-# y=np.arange(0,1.1,0.01)
-# X=np.repeat(np.mean(ni),y.shape)
-# ax0.plot(X,y,color='#1f77b4',lw=1.2)
-# sample_cdf(arnett_ni,arnett_ni_e,ax0,color='olive',n=500)
+import matplotlib.gridspec as gridspec
+f = plt.figure(1,figsize=(5,13))
+gs1 = gridspec.GridSpec(4, 1)
+gs1.update(wspace=0.0, hspace=0.0)
+ax0 = plt.subplot(gs1[0])
+types1=np.array(types)
+arnett_ni=np.array(arnett_ni)
+arnett_ni_e=np.array(arnett_ni_e)
+tpeaks=np.array(tpeaks)
+lpeaks=np.array(lpeaks)
+ni=np.array(ni)
+ni_e=np.array(ni_e)
+khatami_ni=np.array(df['Mni'].tolist())
+khatami_ni_e=np.array(df['Mni_e'].tolist())
+khatami_type=np.array(df['type'].tolist())
+h, edges = np.histogram(arnett_ni, density=True, bins=10000)
+h = np.cumsum(h)/np.cumsum(h).max()
+
+
+d ,p = stats.kstest(list(ni[ (types1=='Ib') | (types1=='Ic')]),deterministic.cdf)
+print "KS test for large tyep II, vs Ib/c",d, p
+
+d ,p = stats.kstest(list(ni),deterministic.cdf)
+print "KS test for large tyep II vs SESNe",d, p
+
+
+X = edges.repeat(2)[:-1]
+y = np.zeros_like(X)
+y[1:] = h.repeat(2)
+ax0.plot(X,y,color='olive',lw=2,label='Arnett')
+y=np.arange(0,1.1,0.01)
+X=np.repeat(np.mean(ni),y.shape)
+ax0.plot(X,y,color='#1f77b4',lw=1.2)
+sample_cdf(arnett_ni,arnett_ni_e,ax0,color='olive',n=500)
 h, edges = np.histogram(ni, density=True, bins=20000)
 h = np.cumsum(h)/np.cumsum(h).max()
 
@@ -298,25 +312,25 @@ y_ss=y
 # h = np.histogram(ni[(types1=='Ib')| (types1=='Ic')], density=True, bins=10000)
 # hist_dist = stats.rv_histogram(h)
 # d ,p = stats.kstest(list(ni[types1=='Ic BL']),hist_dist.cdf)
-# print d, 100-p*100
+# print "KS test",d, p*100
 #
 # h = np.histogram(ni[(types1=='Ib')], density=True, bins=10000)
 # hist_dist = stats.rv_histogram(h)
 # d ,p = stats.kstest(list(ni[types1=='Ic']),hist_dist.cdf)
-# print d, p*100
+# print "KS test",d, p*100
 #
 #
 # h = np.histogram(ni[(types1=='IIb')], density=True, bins=10000)
 # hist_dist = stats.rv_histogram(h)
 # d ,p = stats.kstest(list(ni[ (types1=='Ib') | (types1=='Ic')]),hist_dist.cdf)
-# print d, p*100
+# print "KS test",d, p*100
 #
 #
 #
 # h = np.histogram(ni[(types1=='IIb')], density=True, bins=10000)
 # hist_dist = stats.rv_histogram(h)
 # d ,p = stats.kstest(list(ni[ (types1=='Ib')]),hist_dist.cdf)
-# print d, p*100
+# print "KS test",d, p*100
 #
 # h, edges = np.histogram(arnett_ni[types1=='IIb'], density=True, bins=10000)
 # h = np.cumsum(h)/np.cumsum(h).max()
@@ -440,6 +454,9 @@ y_ss=y
 #
 # plt.gcf().savefig('/home/afsari/PycharmProjects/typeIbcAnalysis/Plots/cdfs.pdf', bbox_inches='tight')
 #
+
+
+#******************************************
 f2 = plt.figure(2,figsize=(5.5,5))
 ax3=plt.subplot(111)
 d ,p = stats.kstest(ni,deterministic.cdf)
@@ -464,27 +481,16 @@ y[1:] = h.repeat(2)
 y_s=y
 #ax0.plot(X,y,color='#1f77b4',lw=2,label='Tail')
 
-ax3.plot(x_s,y_s,color='b',lw=3,label='SESN (Meza20, Tail)',alpha=0.2)
-#print np.array(df['Tail Nickel'].mask( df['Tail Nickel'].eq('None')).dropna()).astype(float)
-# h, edges = np.histogram(np.array(df['Arnett Nickel']).astype(float), density=True, bins=20000)
-# h = np.cumsum(h)/np.cumsum(h).max()
-#
-# X = edges.repeat(2)[:-1]
-# x_s=X
-# y = np.zeros_like(X)
-# y[1:] = h.repeat(2)
-# y_s=y
-# #ax0.plot(X,y,color='#1f77b4',lw=2,label='Tail')
-#
-# ax3.plot(x_s,y_s,color='cyan',lw=3,label='SESN (Meza20, Arnett)',alpha=0.2)
+ax3.plot(x_s,y_s,color='b',lw=3,label='SESN (Meza20, Tail Lower Limit)',alpha=0.2)
+
 
 
 ax3.set_xlim([0.001, 1])
 ax3.set_ylim([0, 1])
 ax3.set_xlabel(r'$M_{\rm Ni} (M_\odot$)',fontsize=18)
 ax3.set_ylabel(r'CDF',fontsize=18)
-ax3.xaxis.set_minor_locator(AutoMinorLocator(5))
-ax3.yaxis.set_minor_locator(AutoMinorLocator(10))
+ax3.xaxis.set_minor_locator(AutoMinorLocator(2))
+ax3.yaxis.set_minor_locator(AutoMinorLocator(2))
 ax3.xaxis.set_tick_params(width=1.5)
 ax3.yaxis.set_tick_params(width=1.5)
 ax3.yaxis.set_ticks_position('both')

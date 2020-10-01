@@ -22,13 +22,13 @@ import random
 #     header=csv_reader.fieldnames
 
 first=0
-b=glob.glob("Data/*_results_wygoda.csv")
+b=glob.glob("Data/*_results_wygoda_tpeak.csv")
 b= sorted(b)
 
-b.remove('Data/iPTF13bvn_results_wygoda.csv')
-b.insert(21,'Data/iPTF13bvn_results_wygoda.csv')
+b.remove('Data/iPTF13bvn_results_wygoda_tpeak.csv')
+b.insert(21,'Data/iPTF13bvn_results_wygoda_tpeak.csv')
 
-with open('Data/SNdata_wygoda_26dec.csv','w') as f:
+with open('Data/SNdata_wygoda_26dec_tpeak.csv','w') as f:
     for file in b:
         #print file
         with open(file, mode='r') as csv_file:
@@ -126,10 +126,10 @@ with open("/home/afsari/PycharmProjects/typeIbcAnalysis/Data/SNdata_wygoda_26dec
 
 
 sn_names=np.array(sn_names)
-ab = np.zeros((28,), dtype=[('SN name', 'U10'), ('Host','U16'),('Type','U5'),('Distance', np.float64),
+ab = np.zeros((27,), dtype=[('SN name', 'U10'), ('Host','U16'),('Type','U5'),('Distance', np.float64),
                             ('Distance_e', np.float64),('E(B-V)_gal', np.float64),('E(B-V)_gal_e', np.float64),
                             ('E(B-V)_host', np.float64),('E(B-V)_host_e', np.float64), ('t0', np.float64),('t0_e', np.float64)])
-res = np.zeros((28,), dtype=[('SN name', 'U10'), ('BC bands','U16'),('Lpeak',np.float64),('Lpeak_e',np.float64),('Tpeak', np.float64),('Tpeak_e', np.float64),
+res = np.zeros((27,), dtype=[('SN name', 'U10'), ('Type','U5'),('BC bands','U16'),('Lpeak',np.float64),('Lpeak_e',np.float64),('Tpeak', np.float64),('Tpeak_e', np.float64),
                             ('mni_tail', np.float64),('mni_tail_e', np.float64),('T0', np.float64),('T0_e', np.float64),('mni_arnett', np.float64),('mni_arnett_e', np.float64),
                             ('beta', np.float64),('beta_e', np.float64),('khatami_mni', np.float64),('khatami_mni_e', np.float64)])
 ab['SN name'] = sn_names
@@ -144,6 +144,7 @@ ab['E(B-V)_host_e'] = np.round(np.array(ebv_host_e),2)
 ab['t0'] = np.round(np.array(t0),1)
 ab['t0_e'] = np.round(np.array(t0_e),1)
 res['SN name'] = sn_names
+res['Type'] = np.array(sn_type)
 res['BC bands']=np.array(bc)
 res['Lpeak']=np.round(np.array(lpeak),2)
 res['Lpeak_e']=np.round(np.array(lpeak_e),2)
@@ -161,5 +162,10 @@ import pandas as pd
 df=pd.read_csv('./Data/khatamiMni.csv')
 res['khatami_mni']=np.round(np.array(df['Mni']),3)
 res['khatami_mni_e']=np.round(np.array(df['Mni_e']),3)
-#np.savetxt("Data/table1_26dec.csv", ab, fmt="%10s & %12s & %6s & %10.1f (%10.1f) & %10.4f (%10.4f) & %10.2f (%10.2f) & %10.1f (%10.1f)", newline=' \\\\\n')
-np.savetxt("Data/table2_26dec.csv", res, fmt="%10s & $%6s$ & %10.2f (%10.2f) & %10.1f (%10.1f) & %10.3f (%10.3f) & %10.1f (%10.1f) & %10.2f (%10.2f) & %10.2f (%10.2f) & %10.3f (%10.3f) ", newline=' \\\\\n')
+np.savetxt("Data/table1_26dec.csv", ab, fmt="%10s & %12s & %6s & %10.1f (%10.1f) & %10.4f (%10.4f) & %10.2f (%10.2f) & %10.1f (%10.1f)", newline=' \\\\\n')
+np.savetxt("Data/table2_26dec.csv", res, fmt="%10s & %6s & $%6s$ & %10.2f (%10.2f) & %10.1f (%10.1f) & %10.3f (%10.3f) & %10.1f (%10.1f) & %10.2f (%10.2f) & %10.2f (%10.2f) & %10.3f (%10.3f) ", newline=' \\\\\n')
+
+#print np.round(np.array(df['Mni']),3)
+
+    #,np.median(np.round(np.array(df['Mni']),3)), np.std(np.round(np.array(df['Mni']),3))
+#print np.mean(np.round(np.array(df['Mni'][df['type']=='IIb']),3)),np.median(np.round(np.array(df['Mni']),3)), np.std(np.round(np.array(df['Mni']),3))
